@@ -2,6 +2,10 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DownloaderBot.Shared", "DownloaderBot.Shared\DownloaderBot.Shared.csproj", "{399971BF-3C09-4291-8DC4-F06770DEDC11}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DownloaderBot.Api", "DownloaderBot.Api\DownloaderBot.Api.csproj", "{422DE95B-A8CB-4940-8DA9-0D65FAC93531}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DownloaderBot.Worker", "DownloaderBot.Worker\DownloaderBot.Worker.csproj", "{9EBA0A7C-435F-49C3-AEAA-D5720BFD07D8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +16,13 @@ Global
 		{399971BF-3C09-4291-8DC4-F06770DEDC11}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{399971BF-3C09-4291-8DC4-F06770DEDC11}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{399971BF-3C09-4291-8DC4-F06770DEDC11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{422DE95B-A8CB-4940-8DA9-0D65FAC93531}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{422DE95B-A8CB-4940-8DA9-0D65FAC93531}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{422DE95B-A8CB-4940-8DA9-0D65FAC93531}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{422DE95B-A8CB-4940-8DA9-0D65FAC93531}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9EBA0A7C-435F-49C3-AEAA-D5720BFD07D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9EBA0A7C-435F-49C3-AEAA-D5720BFD07D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9EBA0A7C-435F-49C3-AEAA-D5720BFD07D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9EBA0A7C-435F-49C3-AEAA-D5720BFD07D8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
