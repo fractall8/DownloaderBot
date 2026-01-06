@@ -1,54 +1,56 @@
 ﻿using System.Diagnostics;
+using System.Text;
+using YoutubeDLSharp;
+using YoutubeDLSharp.Options;
 
 namespace DownloaderBot.Worker.Services;
 
 public class YtDlpWrapper : IDownloaderService
 {
-    private readonly ILogger<YtDlpWrapper> _logger;
-    
+    private readonly ILogger<YtDlpWrapper> logger;
+    private readonly YoutubeDL youtubeDL;
+
     public YtDlpWrapper(ILogger<YtDlpWrapper> logger)
     {
-        _logger = logger;
+        this.logger = logger;
+        youtubeDL = new YoutubeDL
+        {
+            YoutubeDLPath = "yt-dlp",
+            FFmpegPath = "usr/bin/ffmpeg",
+            OutputFolder = "app/downloads",
+        };
     }
-
+    
     public async Task<string> DownloadAsync(string url)
     {
         var fileName = $"{Guid.NewGuid()}.mp3";
-        var outputTemplate = $"/app/downloads/{fileName}";
-
-        var args = $"-x --audio-format mp3 -o \"{outputTemplate}\" \"{url}\"";
+        var outputPath = Path.Combine("app/downloads", fileName);
         
-        var startInfo = new ProcessStartInfo
+        var options = new OptionSet
         {
-            FileName = "yt-dlp",
-            Arguments = args,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
+            AudioFormat = AudioConversionFormat.Mp3,
+            ExtractAudio = true,
+            Output = outputPath,
         };
         
-        _logger.LogInformation("Starting download: {Url}", url);
-
-        using (var process = new Process())
+        var result = await youtubeDL.RunAudioDownload(url, AudioConversionFormat.Mp3, ct: CancellationToken.None, overrideOptions: options);
+        
+        if (!result.Success)
         {
-            process.StartInfo = startInfo;
-            process.Start();
+            var errors = string.Join("\n", result.ErrorOutput);
+            logger.LogError("YoutubeDL failed: {Errors}", errors);
+            throw new Exception($"Download failed: {errors}");
+        }
         
-            var output = await process.StandardOutput.ReadToEndAsync();
-            var error = await process.StandardError.ReadToEndAsync();
+        var finalPath = result.Data;
         
-            await process.WaitForExitAsync();
-
-            if (process.ExitCode != 0)
-            {
-                _logger.LogError("yt-dlp error: {Error}", error);
-                throw new Exception($"Download failed. Exit code: {process.ExitCode}");
-            }
-        };
-
-        _logger.LogInformation("Download completed: {FileName}", fileName);
+        if (string.IsNullOrEmpty(finalPath) || !File.Exists(finalPath))
+        {
+            if (File.Exists(outputPath + ".mp3")) finalPath = outputPath + ".mp3";
+            else if (File.Exists(outputPath)) finalPath = outputPath;
+        }
         
-        return outputTemplate;
+        logger.LogInformation("Download completed: {Path}", finalPath);
+        return finalPath;
     }
 }

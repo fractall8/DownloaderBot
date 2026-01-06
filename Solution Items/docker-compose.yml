@@ -12,6 +12,16 @@
       resources:
         limits:
           memory: 256M
+  worker:
+    container_name: downloaderbot-worker
+    build:
+      context: .
+      dockerfile: ../DownloaderBot.Worker/Dockerfile
+    depends_on:
+      - redis
+    environment:
+      - REDIS_CONNECTION=redis
+      - BOT_TOKEN=8507624217:AAHb99McQFTHi8ClFQQH9EfzEF1pxnurDic
 
 volumes:
   redis_data:

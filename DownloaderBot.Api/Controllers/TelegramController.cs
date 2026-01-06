@@ -23,8 +23,7 @@ public class TelegramController : ControllerBase
     [HttpPost("webhook")]
     public async Task<IActionResult> Post([FromBody] JsonElement jsonElement) // receiving Update here breaks OpenApi
     {
-        var update = jsonElement.Deserialize<Update>();
-        
+        var update = jsonElement.Deserialize<Update>(new JsonSerializerOptions{PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower});
         if (update?.Message is not { } message || message.Text is not { } text)
         {
             return Ok();
