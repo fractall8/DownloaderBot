@@ -22,6 +22,18 @@
     environment:
       - REDIS_CONNECTION=redis
       - BOT_TOKEN=8507624217:AAHb99McQFTHi8ClFQQH9EfzEF1pxnurDic
+  api:
+    build:
+      context: .
+      dockerfile: ../DownloaderBot.Api/Dockerfile
+    container_name: downloaderbot-api
+    restart: always
+    depends_on:
+      - redis
+    ports:
+      - "5189:8080"
+    environment:
+      - REDIS_CONNECTION=redis
 
 volumes:
   redis_data:

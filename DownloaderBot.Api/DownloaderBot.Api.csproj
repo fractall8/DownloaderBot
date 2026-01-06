@@ -17,4 +17,10 @@
       <ProjectReference Include="..\DownloaderBot.Shared\DownloaderBot.Shared.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
+
 </Project>

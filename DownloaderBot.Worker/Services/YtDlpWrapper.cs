@@ -33,6 +33,7 @@ public class YtDlpWrapper : IDownloaderService
             Output = outputPath,
         };
         
+        logger.LogInformation("Start downloading: {Url}", url);
         var result = await youtubeDL.RunAudioDownload(url, AudioConversionFormat.Mp3, ct: CancellationToken.None, overrideOptions: options);
         
         if (!result.Success)
