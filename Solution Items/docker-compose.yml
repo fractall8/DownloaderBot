@@ -21,7 +21,7 @@
       - redis
     environment:
       - REDIS_CONNECTION=redis
-      - BOT_TOKEN=8507624217:AAHb99McQFTHi8ClFQQH9EfzEF1pxnurDic
+      - BOT_TOKEN=${BOT_TOKEN}
   api:
     build:
       context: .
@@ -34,6 +34,7 @@
       - "5189:8080"
     environment:
       - REDIS_CONNECTION=redis
+      - BOT_TOKEN=${BOT_TOKEN}
 
 volumes:
   redis_data:

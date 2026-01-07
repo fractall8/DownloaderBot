@@ -29,27 +29,68 @@ public class Worker(ILogger<Worker> logger, IDownloaderService downloader, ITele
                 var task = JsonSerializer.Deserialize<DownloadTask>(json.ToString());
                 if (task == null) continue;
 
-                var filePath = await downloader.DownloadAsync(task.Url);
+                string filePath = string.Empty;
+                try
+                {
+                    await botClient.EditMessageText(
+                        chatId: task.ChatId,
+                        messageId: task.StatusMessageId,
+                        text: "Downloading your audio...",
+                        cancellationToken: stoppingToken
+                    );
+                    
+                    var result = await downloader.DownloadAsync(task.Url);
+                    filePath = result.FilePath;
+                    var prettyTitle = $"{result.Title}.mp3";
 
-                await using var fileStream = File.OpenRead(filePath);
-                var fileName = Path.GetFileName(filePath);
+                    await botClient.EditMessageText(
+                        chatId: task.ChatId,
+                        messageId: task.StatusMessageId,
+                        text: "Done! Sending audio to telegram...",
+                        cancellationToken: stoppingToken
+                    );
+                    
+                    await using var fileStream = File.OpenRead(filePath);
+                    var inputFile = InputFile.FromStream(fileStream, prettyTitle);
+                    
+                    await botClient.SendAudio(
+                        chatId: task.ChatId,
+                        audio: inputFile,
+                        replyParameters: new ReplyParameters { MessageId = task.ReplyToMessageId },
+                        cancellationToken: stoppingToken
+                    );
+                    
+                    await botClient.DeleteMessage(
+                        chatId: task.ChatId,
+                        messageId: task.StatusMessageId,
+                        cancellationToken: stoppingToken
+                    );
+                    
+                    logger.LogInformation("File sent successfully.");
+                    fileStream.Close();
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Failed to process task");
 
-                await botClient.SendAudio(
-                    chatId: task.ChatId,
-                    audio: InputFile.FromStream(fileStream, fileName),
-                    caption: "Downloaded track",
-                    replyParameters: new ReplyParameters { MessageId = task.MessageId },
-                    cancellationToken: stoppingToken
-                );
-
-                logger.LogInformation("File sent successfully.");
-
-                fileStream.Close();
-                File.Delete(filePath);
+                    await botClient.EditMessageText(
+                        chatId: task.ChatId,
+                        messageId: task.StatusMessageId,
+                        text: "Failed to download audio",
+                        cancellationToken: stoppingToken
+                    );
+                }
+                finally
+                {
+                    if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+                    {
+                        File.Delete(filePath);
+                    }
+                }
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Failed to process task");
+                logger.LogError(e, "Critical worker error");
             }
         }
     }

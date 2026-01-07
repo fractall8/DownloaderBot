@@ -1,4 +1,5 @@
 using StackExchange.Redis;
+using Telegram.Bot;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,6 +7,9 @@ var redisConnectionString = Environment.GetEnvironmentVariable("REDIS_CONNECTION
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(
     ConnectionMultiplexer.Connect(redisConnectionString));
+
+var botToken = Environment.GetEnvironmentVariable("BOT_TOKEN") ?? "token";
+builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(botToken));
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();

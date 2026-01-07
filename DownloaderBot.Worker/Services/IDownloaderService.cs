@@ -1,6 +1,8 @@
-﻿namespace DownloaderBot.Worker.Services;
+﻿using DownloaderBot.Shared;
+
+namespace DownloaderBot.Worker.Services;
 
 public interface IDownloaderService
 {
-    Task<string> DownloadAsync(string url);
+    Task<DownloadResult> DownloadAsync(string url);
 }

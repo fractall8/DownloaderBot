@@ -2,6 +2,7 @@
 using DownloaderBot.Shared;
 using Microsoft.AspNetCore.Mvc;
 using StackExchange.Redis;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
@@ -13,10 +14,12 @@ public class TelegramController : ControllerBase
 {
     private readonly IConnectionMultiplexer _redis;
     private readonly ILogger<TelegramController> _logger;
+    private readonly ITelegramBotClient _botClient;
     
-    public TelegramController(IConnectionMultiplexer redis, ILogger<TelegramController> logger)
+    public TelegramController(IConnectionMultiplexer redis, ITelegramBotClient botClient, ILogger<TelegramController> logger)
     {
         _redis = redis;
+        _botClient = botClient;
         _logger = logger;
     }
 
@@ -45,10 +48,17 @@ public class TelegramController : ControllerBase
         // temporary no url validation 
         if (!string.IsNullOrWhiteSpace(downloadUrl))
         {
+            var statusMessage = await _botClient.SendMessage(
+                chatId: message.Chat.Id, 
+                text: "Link added to queue",
+                replyParameters: new ReplyParameters{MessageId = message.MessageId}
+            );
+            
             var task = new DownloadTask
             {
                 ChatId = message.Chat.Id,
-                MessageId = message.MessageId,
+                StatusMessageId = statusMessage.MessageId,
+                ReplyToMessageId = message.MessageId,
                 Url = downloadUrl
             };
             
