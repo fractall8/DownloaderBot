@@ -6,6 +6,8 @@ using StackExchange.Redis;
 using Telegram.Bot;
 
 var builder = Host.CreateApplicationBuilder(args);
+builder.Services.Configure<WorkerSettings>(builder.Configuration.GetSection("BotSettings"));
+
 var redisConnectionString = Environment.GetEnvironmentVariable("REDIS_CONNECTION") ?? "localhost";
 builder.Services.AddSingleton<IConnectionMultiplexer>(
     ConnectionMultiplexer.Connect($"{redisConnectionString},abortConnect=false"));
