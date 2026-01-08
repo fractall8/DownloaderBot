@@ -10,13 +10,13 @@ public class DownloadProcessor(ILogger<DownloadProcessor> logger, IDownloaderSer
         string filePath = string.Empty;
         try
         {
-            await responseService.EditStatusMessageAsync(task.ChatId, task.StatusMessageId, "Downloading your audio...");
+            await responseService.EditStatusMessageAsync(task.ChatId, task.StatusMessageId, "⬇️ Downloading your audio...");
 
             var result = await downloader.DownloadAsync(task.Url);
             filePath = result.FilePath;
             var prettyTitle = $"{result.Title}.mp3";
 
-            await responseService.EditStatusMessageAsync(task.ChatId, task.StatusMessageId, "Done! Sending audio to telegram...");
+            await responseService.EditStatusMessageAsync(task.ChatId, task.StatusMessageId, "⬆️ Done! Sending audio to telegram...");
 
             await using var fileStream = File.OpenRead(filePath);
 
@@ -29,8 +29,7 @@ public class DownloadProcessor(ILogger<DownloadProcessor> logger, IDownloaderSer
         catch (Exception e)
         {
             logger.LogError(e, "Failed to process task");
-
-            await responseService.EditStatusMessageAsync(task.ChatId, task.StatusMessageId, "Failed to download audio");
+            await responseService.EditStatusMessageAsync(task.ChatId, task.StatusMessageId, "❌ Error: Failed to download audio");
         }
         finally
         {

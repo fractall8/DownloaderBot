@@ -39,7 +39,7 @@ public class BotResponseService(ITelegramBotClient botClient) : IBotResponseServ
     {
         return await botClient.SendMessage(
             chatId: chatId,
-            text: "Link added to queue",
+            text: "⏳ Link added to queue",
             replyParameters: new ReplyParameters { MessageId = replyToMessageId });
     }
 
