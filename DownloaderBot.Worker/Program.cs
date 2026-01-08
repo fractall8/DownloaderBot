@@ -1,3 +1,4 @@
+using DownloaderBot.Shared.Services;
 using DownloaderBot.Worker;
 using DownloaderBot.Worker.Services;
 
@@ -14,9 +15,11 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(
 
 var botToken = Environment.GetEnvironmentVariable("BOT_TOKEN") ?? "token";
 builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(botToken));
+builder.Services.AddSingleton<IBotResponseService, BotResponseService>();
 
+builder.Services.AddSingleton<IDownloadProcessor, DownloadProcessor>();
 builder.Services.AddHostedService<Worker>();
-builder.Services.AddSingleton<IDownloaderService, YtDlpWrapper>();
+builder.Services.AddSingleton<IDownloaderService, YtDlpDownloaderService>();
 
 var host = builder.Build();
 host.Run();

@@ -1,4 +1,4 @@
-﻿using DownloaderBot.Shared;
+﻿using DownloaderBot.Shared.Models;
 
 namespace DownloaderBot.Worker.Services;
 

@@ -1,3 +1,5 @@
+using DownloaderBot.Shared.Services;
+
 using StackExchange.Redis;
 
 using Telegram.Bot;
@@ -11,6 +13,7 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(
 
 var botToken = Environment.GetEnvironmentVariable("BOT_TOKEN") ?? "token";
 builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(botToken));
+builder.Services.AddScoped<IBotResponseService, BotResponseService>();
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();

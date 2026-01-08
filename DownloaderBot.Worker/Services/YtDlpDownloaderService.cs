@@ -1,16 +1,16 @@
-﻿using DownloaderBot.Shared;
+﻿using DownloaderBot.Shared.Models;
 
 using YoutubeDLSharp;
 using YoutubeDLSharp.Options;
 
 namespace DownloaderBot.Worker.Services;
 
-public class YtDlpWrapper : IDownloaderService
+public class YtDlpDownloaderService : IDownloaderService
 {
-    private readonly ILogger<YtDlpWrapper> logger;
+    private readonly ILogger<YtDlpDownloaderService> logger;
     private readonly YoutubeDL youtubeDL;
 
-    public YtDlpWrapper(ILogger<YtDlpWrapper> logger)
+    public YtDlpDownloaderService(ILogger<YtDlpDownloaderService> logger)
     {
         this.logger = logger;
         youtubeDL = new YoutubeDL
