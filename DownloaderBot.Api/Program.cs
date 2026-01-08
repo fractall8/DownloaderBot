@@ -1,4 +1,4 @@
-using DownloaderBot.Api.Services;
+using DownloaderBot.Shared.Services;
 
 using StackExchange.Redis;
 

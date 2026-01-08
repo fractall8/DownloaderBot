@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 
-using DownloaderBot.Api.Services;
-using DownloaderBot.Shared;
+using DownloaderBot.Shared.Models;
+using DownloaderBot.Shared.Services;
 
 using Microsoft.AspNetCore.Mvc;
 

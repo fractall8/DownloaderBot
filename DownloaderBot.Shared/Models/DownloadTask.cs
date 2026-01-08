@@ -1,4 +1,4 @@
-﻿namespace DownloaderBot.Shared;
+﻿namespace DownloaderBot.Shared.Models;
 
 public class DownloadTask
 {

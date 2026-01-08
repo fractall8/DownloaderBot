@@ -2,7 +2,7 @@
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
-namespace DownloaderBot.Api.Services;
+namespace DownloaderBot.Shared.Services;
 
 public class BotResponseService(ITelegramBotClient botClient) : IBotResponseService
 {
@@ -41,5 +41,30 @@ public class BotResponseService(ITelegramBotClient botClient) : IBotResponseServ
             chatId: chatId,
             text: "Link added to queue",
             replyParameters: new ReplyParameters { MessageId = replyToMessageId });
+    }
+
+    public async Task EditStatusMessageAsync(long chatId, int messageId, string text)
+    {
+        await botClient.EditMessageText(
+            chatId: chatId,
+            messageId: messageId,
+            text: text);
+    }
+
+    public async Task SendAudioFileAsync(long chatId, Stream fileStream, string title, int replyToMessageId)
+    {
+        var inputFile = InputFile.FromStream(fileStream, title);
+
+        await botClient.SendAudio(
+            chatId: chatId,
+            audio: inputFile,
+            replyParameters: new ReplyParameters { MessageId = replyToMessageId });
+    }
+
+    public async Task DeleteMessageAsync(long chatId, int messageId)
+    {
+        await botClient.DeleteMessage(
+            chatId: chatId,
+            messageId: messageId);
     }
 }
