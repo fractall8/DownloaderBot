@@ -1,5 +1,6 @@
 using System.Text.Json;
 
+using DownloaderBot.Shared.Configuration;
 using DownloaderBot.Shared.Models;
 
 using DownloaderBot.Worker.Services;
@@ -10,7 +11,7 @@ using StackExchange.Redis;
 
 namespace DownloaderBot.Worker;
 
-public class Worker(ILogger<Worker> logger, IDownloadProcessor processor, IConnectionMultiplexer redis, IOptions<WorkerSettings> settings) : BackgroundService
+public class Worker(ILogger<Worker> logger, IDownloadProcessor processor, IConnectionMultiplexer redis, IOptions<BotSettings> settings) : BackgroundService
 {
     private readonly SemaphoreSlim semaphore = new(settings.Value.MaxConcurrentDownloads);
 

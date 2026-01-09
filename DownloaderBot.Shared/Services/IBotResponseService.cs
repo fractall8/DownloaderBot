@@ -15,4 +15,6 @@ public interface IBotResponseService
     Task SendAudioFileAsync(long chatId, Stream fileStream, string title, int replyToMessageId);
 
     Task DeleteMessageAsync(long chatId, int messageId);
+
+    Task SendInvalidLinkAsync(long chatId, int messageId);
 }
