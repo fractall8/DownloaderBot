@@ -1,10 +1,12 @@
 ﻿using System.Text.Json;
 
 using DownloaderBot.Api.Services;
+using DownloaderBot.Shared.Configuration;
 using DownloaderBot.Shared.Models;
 using DownloaderBot.Shared.Services;
 
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 using StackExchange.Redis;
 
@@ -19,6 +21,7 @@ public class TelegramController(
     IConnectionMultiplexer redis,
     IBotResponseService responseService,
     ILinkValidatorService linkValidatorService,
+    IOptions<BotSettings> settings,
     ILogger<TelegramController> logger)
     : ControllerBase
 {
@@ -47,14 +50,29 @@ public class TelegramController(
         }
 
         string? downloadUrl = null;
+        string downloadInGroupCommand = settings.Value.Commands.DownloadInGroupCommand;
 
         if (message.Chat.Type == ChatType.Private)
         {
-            downloadUrl = message.Text;
+            string text = message.Text?.Trim() ?? string.Empty;
+
+            if (text.StartsWith(downloadInGroupCommand, StringComparison.OrdinalIgnoreCase))
+            {
+                downloadUrl = await ParseUrlFromCommand(message.Text, downloadInGroupCommand);
+            }
+            else
+            {
+                downloadUrl = text;
+            }
         }
-        else if (message.Text?.StartsWith("/get ") == true) // for now hardcoded command
+        else if (message.Text?.StartsWith(downloadInGroupCommand, StringComparison.OrdinalIgnoreCase) == true)
         {
-            downloadUrl = message.Text.Replace("/get", string.Empty).Trim();
+            downloadUrl = await ParseUrlFromCommand(message.Text, downloadInGroupCommand);
+
+            if (downloadUrl == null)
+            {
+                return Ok();
+            }
         }
 
         if (!linkValidatorService.IsValid(downloadUrl))
@@ -79,5 +97,36 @@ public class TelegramController(
         await db.ListRightPushAsync("downloads", json);
         logger.LogInformation("Task added to Redis {Url}", downloadUrl);
         return Ok();
+    }
+
+    private async Task<string?> ParseUrlFromCommand(string? messageText, string command)
+    {
+        if (string.IsNullOrWhiteSpace(messageText) || string.IsNullOrWhiteSpace(command))
+        {
+            return null;
+        }
+
+        var parts = messageText.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+
+        if (parts.Length < 2)
+        {
+            return null;
+        }
+
+        var inputCommand = parts[0];
+        var url = parts[1].Trim();
+        var bot = await responseService.GetBotInfoAsync();
+
+        if (bot.Username != null)
+        {
+            inputCommand = inputCommand.Replace($"@{bot.Username}", string.Empty, StringComparison.OrdinalIgnoreCase);
+        }
+
+        if (inputCommand.Equals(command, StringComparison.OrdinalIgnoreCase))
+        {
+            return url;
+        }
+
+        return null;
     }
 }

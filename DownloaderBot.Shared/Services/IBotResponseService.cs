@@ -4,6 +4,8 @@ namespace DownloaderBot.Shared.Services;
 
 public interface IBotResponseService
 {
+    Task<User> GetBotInfoAsync();
+
     Task SendPrivateWelcomeAsync(long chatId, string userName);
 
     Task SendGroupWelcomeAsync(long chatId, User[] newChatMembers);

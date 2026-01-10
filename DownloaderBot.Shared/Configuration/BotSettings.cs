@@ -8,4 +8,6 @@ public class BotSettings
     public int MaxConcurrentDownloads { get; set; } = 3;
 
     public int MaxFileSizeMb { get; set; } = 50;
+
+    public BotCommands Commands { get; set; } = new BotCommands();
 }
