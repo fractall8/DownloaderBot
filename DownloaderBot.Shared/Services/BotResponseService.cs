@@ -1,10 +1,14 @@
-﻿using Telegram.Bot;
+﻿using DownloaderBot.Shared.Configuration;
+
+using Microsoft.Extensions.Options;
+
+using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
 namespace DownloaderBot.Shared.Services;
 
-public class BotResponseService(ITelegramBotClient botClient) : IBotResponseService
+public class BotResponseService(ITelegramBotClient botClient, IOptions<BotSettings> settings) : IBotResponseService
 {
     public async Task SendPrivateWelcomeAsync(long chatId, string userName)
     {
@@ -66,5 +70,20 @@ public class BotResponseService(ITelegramBotClient botClient) : IBotResponseServ
         await botClient.DeleteMessage(
             chatId: chatId,
             messageId: messageId);
+    }
+
+    public async Task SendInvalidLinkAsync(long chatId, int messageId)
+    {
+        string supportedDomains = string.Join(", ", settings.Value.AllowedDomains);
+        string text =
+            "🧐 Seems like this link is invalid or domain isn't supported\n\n" +
+            "Supported domains:\n" +
+            $"<i>{supportedDomains}</i>";
+
+        await botClient.SendMessage(
+            chatId: chatId,
+            text: text,
+            replyParameters: new ReplyParameters { MessageId = messageId },
+            parseMode: ParseMode.Html);
     }
 }

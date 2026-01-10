@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 
+using DownloaderBot.Api.Services;
 using DownloaderBot.Shared.Models;
 using DownloaderBot.Shared.Services;
 
@@ -14,19 +15,13 @@ namespace DownloaderBot.Api.Controllers;
 
 [ApiController]
 [Route("api/bot")]
-public class TelegramController : ControllerBase
+public class TelegramController(
+    IConnectionMultiplexer redis,
+    IBotResponseService responseService,
+    ILinkValidatorService linkValidatorService,
+    ILogger<TelegramController> logger)
+    : ControllerBase
 {
-    private readonly IConnectionMultiplexer redis;
-    private readonly ILogger<TelegramController> logger;
-    private readonly IBotResponseService responseService;
-
-    public TelegramController(IConnectionMultiplexer redis, IBotResponseService responseService, ILogger<TelegramController> logger)
-    {
-        this.redis = redis;
-        this.responseService = responseService;
-        this.logger = logger;
-    }
-
     [HttpPost("webhook")]
     public async Task<IActionResult> Post([FromBody] JsonElement jsonElement) // receiving Update here breaks OpenApi
     {
@@ -59,31 +54,30 @@ public class TelegramController : ControllerBase
         }
         else if (message.Text?.StartsWith("/get ") == true) // for now hardcoded command
         {
-            downloadUrl = message.Text.Replace("/get ", string.Empty).Trim();
+            downloadUrl = message.Text.Replace("/get", string.Empty).Trim();
         }
 
-        // validate url before pushing task to Redis
-        // temporary no url validation
-        if (!string.IsNullOrWhiteSpace(downloadUrl))
+        if (!linkValidatorService.IsValid(downloadUrl))
         {
-            var statusMessage = await responseService.SendQueuedMessageAsync(message.Chat.Id, message.MessageId);
-
-            var task = new DownloadTask
-            {
-                ChatId = message.Chat.Id,
-                StatusMessageId = statusMessage.MessageId,
-                ReplyToMessageId = message.MessageId,
-                Url = downloadUrl,
-            };
-
-            var db = redis.GetDatabase();
-            var json = JsonSerializer.Serialize(task);
-
-            await db.ListRightPushAsync("downloads", json);
-
-            logger.LogInformation("Task added to Redis {Url}", downloadUrl);
+            await responseService.SendInvalidLinkAsync(message.Chat.Id, message.MessageId);
+            return Ok();
         }
 
+        var statusMessage = await responseService.SendQueuedMessageAsync(message.Chat.Id, message.MessageId);
+
+        var task = new DownloadTask
+        {
+            ChatId = message.Chat.Id,
+            StatusMessageId = statusMessage.MessageId,
+            ReplyToMessageId = message.MessageId,
+            Url = downloadUrl,
+        };
+
+        var db = redis.GetDatabase();
+        var json = JsonSerializer.Serialize(task);
+
+        await db.ListRightPushAsync("downloads", json);
+        logger.LogInformation("Task added to Redis {Url}", downloadUrl);
         return Ok();
     }
 }

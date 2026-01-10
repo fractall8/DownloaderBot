@@ -22,6 +22,8 @@
     environment:
       - REDIS_CONNECTION=redis
       - BOT_TOKEN=${BOT_TOKEN}
+    volumes:
+      - ../botsettings.json:/app/botsettings.json
   api:
     build:
       context: .
@@ -35,6 +37,7 @@
     environment:
       - REDIS_CONNECTION=redis
       - BOT_TOKEN=${BOT_TOKEN}
-
+    volumes:
+      - ../botsettings.json:/app/botsettings.json
 volumes:
   redis_data:

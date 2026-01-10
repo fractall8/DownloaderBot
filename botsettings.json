@@ -1,0 +1,14 @@
+﻿{
+  "BotSettings": {
+    "AllowedDomains": [
+      "youtube.com",
+      "youtu.be",
+      "soundcloud.com",
+      "tiktok.com",
+      "vm.tiktok.com",
+      "vt.tiktok.com"
+    ],
+    "MaxConcurrentDownloads": 5,
+    "MaxFileSizeMb": 50
+  }
+}
