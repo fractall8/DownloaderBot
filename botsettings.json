@@ -9,6 +9,7 @@
       "vt.tiktok.com"
     ],
     "MaxConcurrentDownloads": 5,
-    "MaxFileSizeMb": 50
+    "MaxFileSizeMb": 50,
+    "MaxVideoDurationMins": 120
   }
 }

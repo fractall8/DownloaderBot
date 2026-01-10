@@ -25,6 +25,8 @@ public class LinkValidatorService(IOptions<BotSettings> settings) : ILinkValidat
             return false;
         }
 
-        return settings.Value.AllowedDomains.Any(d => uri.Host.Contains(d));
+        return settings.Value.AllowedDomains.Any(domain =>
+            uri.Host.Equals(domain, StringComparison.OrdinalIgnoreCase) ||
+            uri.Host.EndsWith($".{domain}", StringComparison.OrdinalIgnoreCase));
     }
 }

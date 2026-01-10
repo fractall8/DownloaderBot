@@ -1,23 +1,46 @@
 ﻿using DownloaderBot.Shared.Models;
+using DownloaderBot.Worker.Models;
 
 using YoutubeDLSharp;
 using YoutubeDLSharp.Options;
 
 namespace DownloaderBot.Worker.Services;
 
-public class YtDlpDownloaderService : IDownloaderService
+public class YtDlpDownloaderService(ILogger<YtDlpDownloaderService> logger) : IDownloaderService
 {
-    private readonly ILogger<YtDlpDownloaderService> logger;
-    private readonly YoutubeDL youtubeDL;
-
-    public YtDlpDownloaderService(ILogger<YtDlpDownloaderService> logger)
+    private readonly YoutubeDL youtubeDL = new()
     {
-        this.logger = logger;
-        youtubeDL = new YoutubeDL
+        YoutubeDLPath = "yt-dlp",
+        FFmpegPath = "usr/bin/ffmpeg",
+        OutputFolder = "app/downloads",
+    };
+
+    public async Task<VideoInfo> GetVideoInfoAsync(string url)
+    {
+        var res = await youtubeDL.RunVideoDataFetch(url);
+        if (!res.Success)
         {
-            YoutubeDLPath = "yt-dlp",
-            FFmpegPath = "usr/bin/ffmpeg",
-            OutputFolder = "app/downloads",
+            throw new Exception("Failed to fetch info");
+        }
+
+        var data = res.Data;
+        long? size = null;
+
+        if (data.Formats != null && data.Formats.Length > 0)
+        {
+            size = data.Formats
+                .Where(f => f.FileSize > 0)
+                .OrderByDescending(f => f.FileSize)
+                .Select(f => f.FileSize)
+                .FirstOrDefault();
+        }
+
+        return new VideoInfo
+        {
+            Title = data.Title,
+            FileSizeBytes = size,
+            DurationSeconds = data.Duration ?? 0,
+            IsLive = data.IsLive,
         };
     }
 

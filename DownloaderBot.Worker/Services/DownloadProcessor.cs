@@ -1,15 +1,50 @@
-﻿using DownloaderBot.Shared.Models;
+﻿using DownloaderBot.Shared.Configuration;
+using DownloaderBot.Shared.Models;
 using DownloaderBot.Shared.Services;
+
+using Microsoft.Extensions.Options;
 
 namespace DownloaderBot.Worker.Services;
 
-public class DownloadProcessor(ILogger<DownloadProcessor> logger, IDownloaderService downloader, IBotResponseService responseService) : IDownloadProcessor
+public class DownloadProcessor(IDownloaderService downloader, IBotResponseService responseService, IOptions<BotSettings> settings, ILogger<DownloadProcessor> logger) : IDownloadProcessor
 {
     public async Task ProcessAsync(DownloadTask task, CancellationToken stoppingToken)
     {
         string filePath = string.Empty;
         try
         {
+            long maxSizeBytes = settings.Value.MaxFileSizeMb * 1024 * 1024;
+            await responseService.EditStatusMessageAsync(task.ChatId, task.StatusMessageId, "🔎 Checking file info...");
+
+            var info = await downloader.GetVideoInfoAsync(task.Url);
+
+            if (info.FileSizeBytes > maxSizeBytes)
+            {
+                var sizeMb = info.FileSizeBytes / 1024 / 1024;
+                string errorText = $"❌ File is too big!\n" +
+                              $"Size: {sizeMb} MB\n" +
+                              $"Limit: {settings.Value.MaxFileSizeMb} MB";
+
+                await responseService.EditStatusMessageAsync(
+                    chatId: task.ChatId,
+                    messageId: task.StatusMessageId,
+                    text: errorText);
+                return;
+            }
+
+            int maxVideoDurationSeconds = settings.Value.MaxVideoDurationMins * 60;
+            if (info.FileSizeBytes == null && info.DurationSeconds > maxVideoDurationSeconds)
+            {
+                await responseService.EditStatusMessageAsync(task.ChatId, task.StatusMessageId, "❌ Video is too long.");
+                return;
+            }
+
+            if (info.IsLive == true)
+            {
+                await responseService.EditStatusMessageAsync(task.ChatId, task.StatusMessageId, "❌ This is a live stream. I can download audio only from finished videos");
+                return;
+            }
+
             await responseService.EditStatusMessageAsync(task.ChatId, task.StatusMessageId, "⬇️ Downloading your audio...");
 
             var result = await downloader.DownloadAsync(task.Url);

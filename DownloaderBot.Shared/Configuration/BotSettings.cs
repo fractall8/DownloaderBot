@@ -8,4 +8,6 @@ public class BotSettings
     public int MaxConcurrentDownloads { get; set; } = 3;
 
     public int MaxFileSizeMb { get; set; } = 50;
+
+    public int MaxVideoDurationMins { get; set; } = 120;
 }
