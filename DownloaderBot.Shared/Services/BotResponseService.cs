@@ -60,9 +60,19 @@ public class BotResponseService(ITelegramBotClient botClient, IOptions<BotSettin
             text: text);
     }
 
-    public async Task SendAudioFileAsync(long chatId, Stream fileStream, string title, int replyToMessageId)
+    public async Task<Message> SendAudioFileAsync(long chatId, Stream fileStream, string title, int replyToMessageId)
     {
         var inputFile = InputFile.FromStream(fileStream, title);
+
+        return await botClient.SendAudio(
+            chatId: chatId,
+            audio: inputFile,
+            replyParameters: new ReplyParameters { MessageId = replyToMessageId });
+    }
+
+    public async Task SendCachedAudioFileAsync(long chatId, string fileId, int replyToMessageId)
+    {
+        var inputFile = InputFile.FromFileId(fileId);
 
         await botClient.SendAudio(
             chatId: chatId,

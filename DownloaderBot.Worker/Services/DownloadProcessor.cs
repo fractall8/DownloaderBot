@@ -4,9 +4,16 @@ using DownloaderBot.Shared.Services;
 
 using Microsoft.Extensions.Options;
 
+using StackExchange.Redis;
+
 namespace DownloaderBot.Worker.Services;
 
-public class DownloadProcessor(IDownloaderService downloader, IBotResponseService responseService, IOptions<BotSettings> settings, ILogger<DownloadProcessor> logger) : IDownloadProcessor
+public class DownloadProcessor(
+    IDownloaderService downloader,
+    IBotResponseService responseService,
+    IConnectionMultiplexer redis,
+    IOptions<BotSettings> settings,
+    ILogger<DownloadProcessor> logger) : IDownloadProcessor
 {
     public async Task ProcessAsync(DownloadTask task, CancellationToken stoppingToken)
     {
@@ -41,7 +48,29 @@ public class DownloadProcessor(IDownloaderService downloader, IBotResponseServic
 
             if (info.IsLive == true)
             {
-                await responseService.EditStatusMessageAsync(task.ChatId, task.StatusMessageId, "❌ This is a live stream. I can download audio only from finished videos");
+                await responseService.EditStatusMessageAsync(
+                    task.ChatId,
+                    task.StatusMessageId,
+                    "❌ This is a live stream. I can download audio only from finished videos");
+                return;
+            }
+
+            var db = redis.GetDatabase();
+            string cacheKey = $"audio_cache:{info.Id}";
+            var cachedFileId = await db.StringGetAsync(cacheKey);
+
+            if (cachedFileId.HasValue)
+            {
+                logger.LogInformation("Cache Hit! Sending via FileId: {Id}", info.Id);
+
+                await responseService.SendCachedAudioFileAsync(
+                    task.ChatId,
+                    cachedFileId.ToString(),
+                    task.ReplyToMessageId);
+
+                await db.KeyExpireAsync(cacheKey, TimeSpan.FromDays(settings.Value.CacheTtlDays));
+
+                await responseService.DeleteMessageAsync(task.ChatId, task.StatusMessageId);
                 return;
             }
 
@@ -55,9 +84,15 @@ public class DownloadProcessor(IDownloaderService downloader, IBotResponseServic
 
             await using var fileStream = File.OpenRead(filePath);
 
-            await responseService.SendAudioFileAsync(task.ChatId, fileStream, prettyTitle, task.ReplyToMessageId);
-            await responseService.DeleteMessageAsync(task.ChatId, task.StatusMessageId);
+            var sentMessage = await responseService.SendAudioFileAsync(task.ChatId, fileStream, prettyTitle, task.ReplyToMessageId);
 
+            if (sentMessage.Audio?.FileId is { } newFileId && !string.IsNullOrEmpty(info.Id))
+            {
+                await db.StringSetAsync(cacheKey, newFileId, TimeSpan.FromDays(settings.Value.CacheTtlDays));
+                logger.LogInformation("Cached new fileId for {Id}", info.Id);
+            }
+
+            await responseService.DeleteMessageAsync(task.ChatId, task.StatusMessageId);
             logger.LogInformation("File sent successfully.");
             fileStream.Close();
         }

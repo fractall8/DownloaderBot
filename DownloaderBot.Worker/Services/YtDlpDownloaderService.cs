@@ -24,6 +24,8 @@ public class YtDlpDownloaderService(ILogger<YtDlpDownloaderService> logger) : ID
         }
 
         var data = res.Data;
+        logger.LogInformation("Resolved url: {Url}, ID: {Id}", data.Url, data.ID);
+
         long? size = null;
 
         if (data.Formats != null && data.Formats.Length > 0)
@@ -37,6 +39,7 @@ public class YtDlpDownloaderService(ILogger<YtDlpDownloaderService> logger) : ID
 
         return new VideoInfo
         {
+            Id = data.ID,
             Title = data.Title,
             FileSizeBytes = size,
             DurationSeconds = data.Duration ?? 0,

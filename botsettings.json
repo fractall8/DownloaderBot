@@ -11,6 +11,7 @@
     "MaxConcurrentDownloads": 5,
     "MaxFileSizeMb": 50,
     "MaxVideoDurationMins": 120,
+    "CacheTtlDays": 30,
     "Commands": {
       "GetInGroupCommand": "/get"
     }

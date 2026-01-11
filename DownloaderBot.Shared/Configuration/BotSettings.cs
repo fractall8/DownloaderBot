@@ -11,5 +11,7 @@ public class BotSettings
 
     public int MaxVideoDurationMins { get; set; } = 120;
 
+    public int CacheTtlDays { get; set; } = 30;
+
     public BotCommands Commands { get; set; } = new BotCommands();
 }
