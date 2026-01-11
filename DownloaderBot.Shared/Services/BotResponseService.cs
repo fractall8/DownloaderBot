@@ -21,6 +21,11 @@ public class BotResponseService(ITelegramBotClient botClient, IOptions<BotSettin
         await botClient.SendMessage(chatId: chatId, text: text);
     }
 
+    public async Task<User> GetBotInfoAsync()
+    {
+        return await botClient.GetMe();
+    }
+
     public async Task SendGroupWelcomeAsync(long chatId, User[] newChatMembers)
     {
         var me = await botClient.GetMe();

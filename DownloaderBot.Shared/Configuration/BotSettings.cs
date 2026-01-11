@@ -10,4 +10,6 @@ public class BotSettings
     public int MaxFileSizeMb { get; set; } = 50;
 
     public int MaxVideoDurationMins { get; set; } = 120;
+
+    public BotCommands Commands { get; set; } = new BotCommands();
 }

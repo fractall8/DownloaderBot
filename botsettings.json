@@ -10,6 +10,9 @@
     ],
     "MaxConcurrentDownloads": 5,
     "MaxFileSizeMb": 50,
-    "MaxVideoDurationMins": 120
+    "MaxVideoDurationMins": 120,
+    "Commands": {
+      "GetInGroupCommand": "/get"
+    }
   }
 }
