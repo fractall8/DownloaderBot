@@ -12,6 +12,8 @@ public interface IBotResponseService
 
     Task<Message> SendQueuedMessageAsync(long chatId, int replyToMessageId);
 
+    Task<Message> SendMessageAsync(long chatId, string text, int? replyToMessageId = null);
+
     Task EditStatusMessageAsync(long chatId, int messageId, string text);
 
     Task<Message> SendAudioFileAsync(long chatId, Stream fileStream, string title, int replyToMessageId);

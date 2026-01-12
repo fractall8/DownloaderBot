@@ -20,6 +20,7 @@ builder.Services.Configure<BotSettings>(builder.Configuration.GetSection("BotSet
 builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(botToken));
 builder.Services.AddScoped<IBotResponseService, BotResponseService>();
 builder.Services.AddScoped<ILinkValidatorService, LinkValidatorService>();
+builder.Services.AddScoped<IUserQueueService, UserQueueService>();
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();

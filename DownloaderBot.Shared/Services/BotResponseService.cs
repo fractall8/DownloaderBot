@@ -52,6 +52,21 @@ public class BotResponseService(ITelegramBotClient botClient, IOptions<BotSettin
             replyParameters: new ReplyParameters { MessageId = replyToMessageId });
     }
 
+    public async Task<Message> SendMessageAsync(long chatId, string text, int? replyToMessageId = null)
+    {
+        if (replyToMessageId is { } id)
+        {
+            return await botClient.SendMessage(
+                chatId: chatId,
+                text: text,
+                replyParameters: new ReplyParameters { MessageId = id });
+        }
+
+        return await botClient.SendMessage(
+            chatId: chatId,
+            text: text);
+    }
+
     public async Task EditStatusMessageAsync(long chatId, int messageId, string text)
     {
         await botClient.EditMessageText(

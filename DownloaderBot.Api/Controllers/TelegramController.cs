@@ -21,6 +21,7 @@ public class TelegramController(
     IConnectionMultiplexer redis,
     IBotResponseService responseService,
     ILinkValidatorService linkValidatorService,
+    IUserQueueService queueService,
     IOptions<BotSettings> settings,
     ILogger<TelegramController> logger)
     : ControllerBase
@@ -81,6 +82,26 @@ public class TelegramController(
             return Ok();
         }
 
+        var db = redis.GetDatabase();
+
+        // Check queue limit
+        if (!await queueService.TryAddToQueueAsync(message.Chat.Id))
+        {
+            string warnKey = $"warn_limit:{message.Chat.Id}";
+
+            if (!await db.KeyExistsAsync(warnKey))
+            {
+                string warnText = $"✋ Queue limit reached!\n" +
+                                   $"You can have maximum {settings.Value.MaxUserQueueSize} active downloads.\n" +
+                                   "Please wait for your previous downloads finish.";
+                await responseService.SendMessageAsync(message.Chat.Id, warnText, message.MessageId);
+
+                await db.StringSetAsync(warnKey, "1", TimeSpan.FromSeconds(settings.Value.LimitMessageIntervalSecs));
+            }
+
+            return Ok();
+        }
+
         var statusMessage = await responseService.SendQueuedMessageAsync(message.Chat.Id, message.MessageId);
 
         var task = new DownloadTask
@@ -91,7 +112,6 @@ public class TelegramController(
             Url = downloadUrl,
         };
 
-        var db = redis.GetDatabase();
         var json = JsonSerializer.Serialize(task);
 
         await db.ListRightPushAsync("downloads", json);

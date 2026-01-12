@@ -23,6 +23,7 @@ builder.Services.AddSingleton<IBotResponseService, BotResponseService>();
 builder.Services.AddSingleton<IDownloadProcessor, DownloadProcessor>();
 builder.Services.AddHostedService<Worker>();
 builder.Services.AddSingleton<IDownloaderService, YtDlpDownloaderService>();
+builder.Services.AddSingleton<IUserQueueService, UserQueueService>();
 
 var host = builder.Build();
 host.Run();

@@ -11,6 +11,7 @@ namespace DownloaderBot.Worker.Services;
 public class DownloadProcessor(
     IDownloaderService downloader,
     IBotResponseService responseService,
+    IUserQueueService queueService,
     IConnectionMultiplexer redis,
     IOptions<BotSettings> settings,
     ILogger<DownloadProcessor> logger) : IDownloadProcessor
@@ -103,6 +104,7 @@ public class DownloadProcessor(
         }
         finally
         {
+            await queueService.ReleaseSlotAsync(task.ChatId);
             if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
             {
                 File.Delete(filePath);

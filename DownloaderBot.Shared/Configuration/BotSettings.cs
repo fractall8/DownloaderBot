@@ -13,5 +13,9 @@ public class BotSettings
 
     public int CacheTtlDays { get; set; } = 30;
 
+    public int MaxUserQueueSize { get; set; } = 5;
+
+    public int LimitMessageIntervalSecs { get; set; } = 10;
+
     public BotCommands Commands { get; set; } = new BotCommands();
 }
