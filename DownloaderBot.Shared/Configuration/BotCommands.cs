@@ -2,5 +2,5 @@
 
 public class BotCommands
 {
-    public string DownloadInGroupCommand { get; set; } = "/get";
+    public string DownloadInGroupCommand { get; set; } = "get";
 }

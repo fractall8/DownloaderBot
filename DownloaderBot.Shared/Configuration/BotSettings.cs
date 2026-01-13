@@ -17,5 +17,9 @@ public class BotSettings
 
     public int LimitMessageIntervalSecs { get; set; } = 10;
 
+    public string SecretToken { get; set; } = string.Empty;
+
+    public string HostAddress { get; set; } = string.Empty;
+
     public BotCommands Commands { get; set; } = new BotCommands();
 }

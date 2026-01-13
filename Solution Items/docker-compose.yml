@@ -35,8 +35,12 @@
     ports:
       - "5189:8080"
     environment:
+      - BotSettings__SecretToken=${SECRET_TOKEN}
+      - BotSettings__HostAddress=${HOST_ADDRESS}
       - REDIS_CONNECTION=redis
       - BOT_TOKEN=${BOT_TOKEN}
+    env_file:
+      - .env
     volumes:
       - ../botsettings.json:/app/botsettings.json
 volumes:

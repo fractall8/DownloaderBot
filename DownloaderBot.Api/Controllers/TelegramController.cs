@@ -27,8 +27,15 @@ public class TelegramController(
     : ControllerBase
 {
     [HttpPost("webhook")]
-    public async Task<IActionResult> Post([FromBody] JsonElement jsonElement) // receiving Update here breaks OpenApi
+    public async Task<IActionResult> Post(
+        [FromBody] JsonElement jsonElement, // receiving Update here breaks OpenApi
+        [FromHeader(Name = "X-Telegram-Bot-Api-Secret-Token")] string? secretToken)
     {
+        if (secretToken != settings.Value.SecretToken)
+        {
+            return Forbid();
+        }
+
         var update = jsonElement.Deserialize<Update>(new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
         if (update?.Message is not { } message)
         {
@@ -51,7 +58,7 @@ public class TelegramController(
         }
 
         string? downloadUrl = null;
-        string downloadInGroupCommand = settings.Value.Commands.DownloadInGroupCommand;
+        string downloadInGroupCommand = $"/{settings.Value.Commands.DownloadInGroupCommand}";
 
         if (message.Chat.Type == ChatType.Private)
         {
