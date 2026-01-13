@@ -3,12 +3,11 @@
 using DownloaderBot.Api.Services;
 using DownloaderBot.Shared.Configuration;
 using DownloaderBot.Shared.Models;
+using DownloaderBot.Shared.Repositories;
 using DownloaderBot.Shared.Services;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-
-using StackExchange.Redis;
 
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -18,7 +17,8 @@ namespace DownloaderBot.Api.Controllers;
 [ApiController]
 [Route("api/bot")]
 public class TelegramController(
-    IConnectionMultiplexer redis,
+    ITaskRepository taskRepository,
+    IUserLimitRepository userLimitRepository,
     IBotResponseService responseService,
     ILinkValidatorService linkValidatorService,
     IUserQueueService queueService,
@@ -89,21 +89,21 @@ public class TelegramController(
             return Ok();
         }
 
-        var db = redis.GetDatabase();
-
         // Check queue limit
         if (!await queueService.TryAddToQueueAsync(message.Chat.Id))
         {
-            string warnKey = $"warn_limit:{message.Chat.Id}";
-
-            if (!await db.KeyExistsAsync(warnKey))
+            bool isWarningCooldown = await userLimitRepository.IsWarningOnCooldownAsync(message.Chat.Id);
+            
+            if (!isWarningCooldown)
             {
                 string warnText = $"✋ Queue limit reached!\n" +
                                    $"You can have maximum {settings.Value.MaxUserQueueSize} active downloads.\n" +
                                    "Please wait for your previous downloads finish.";
                 await responseService.SendMessageAsync(message.Chat.Id, warnText, message.MessageId);
 
-                await db.StringSetAsync(warnKey, "1", TimeSpan.FromSeconds(settings.Value.LimitMessageIntervalSecs));
+                await userLimitRepository.SetWarningCooldownAsync(
+                    chatId: message.Chat.Id, 
+                    ttl: TimeSpan.FromSeconds(settings.Value.LimitMessageIntervalSecs));
             }
 
             return Ok();
@@ -119,9 +119,7 @@ public class TelegramController(
             Url = downloadUrl,
         };
 
-        var json = JsonSerializer.Serialize(task);
-
-        await db.ListRightPushAsync("downloads", json);
+        await taskRepository.EnqueueTaskAsync(task);
         logger.LogInformation("Task added to Redis {Url}", downloadUrl);
         return Ok();
     }

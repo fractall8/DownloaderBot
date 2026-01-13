@@ -1,10 +1,9 @@
 ﻿using DownloaderBot.Shared.Configuration;
 using DownloaderBot.Shared.Models;
+using DownloaderBot.Shared.Repositories;
 using DownloaderBot.Shared.Services;
 
 using Microsoft.Extensions.Options;
-
-using StackExchange.Redis;
 
 namespace DownloaderBot.Worker.Services;
 
@@ -12,7 +11,7 @@ public class DownloadProcessor(
     IDownloaderService downloader,
     IBotResponseService responseService,
     IUserQueueService queueService,
-    IConnectionMultiplexer redis,
+    ICacheRepository cacheRepository,
     IOptions<BotSettings> settings,
     ILogger<DownloadProcessor> logger) : IDownloadProcessor
 {
@@ -56,21 +55,17 @@ public class DownloadProcessor(
                 return;
             }
 
-            var db = redis.GetDatabase();
-            string cacheKey = $"audio_cache:{info.Id}";
-            var cachedFileId = await db.StringGetAsync(cacheKey);
+            var cachedFileId = await cacheRepository.GetCachedFileIdAsync(info.Id);
 
-            if (cachedFileId.HasValue)
+            if (cachedFileId != null)
             {
                 logger.LogInformation("Cache Hit! Sending via FileId: {Id}", info.Id);
 
                 await responseService.SendCachedAudioFileAsync(
                     task.ChatId,
-                    cachedFileId.ToString(),
+                    cachedFileId,
                     task.ReplyToMessageId);
-
-                await db.KeyExpireAsync(cacheKey, TimeSpan.FromDays(settings.Value.CacheTtlDays));
-
+                
                 await responseService.DeleteMessageAsync(task.ChatId, task.StatusMessageId);
                 return;
             }
@@ -89,7 +84,10 @@ public class DownloadProcessor(
 
             if (sentMessage.Audio?.FileId is { } newFileId && !string.IsNullOrEmpty(info.Id))
             {
-                await db.StringSetAsync(cacheKey, newFileId, TimeSpan.FromDays(settings.Value.CacheTtlDays));
+                await cacheRepository.SetCachedFileIdAsync(
+                    videoId: info.Id,
+                    fileId: newFileId,
+                    ttl: TimeSpan.FromDays(settings.Value.CacheTtlDays));
                 logger.LogInformation("Cached new fileId for {Id}", info.Id);
             }
 

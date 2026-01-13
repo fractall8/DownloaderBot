@@ -2,7 +2,7 @@ using System.Text.Json;
 
 using DownloaderBot.Shared.Configuration;
 using DownloaderBot.Shared.Models;
-
+using DownloaderBot.Shared.Repositories;
 using DownloaderBot.Worker.Services;
 
 using Microsoft.Extensions.Options;
@@ -14,14 +14,13 @@ namespace DownloaderBot.Worker;
 public class Worker(
     ILogger<Worker> logger,
     IDownloadProcessor processor,
-    IConnectionMultiplexer redis,
+    ITaskRepository taskRepository,
     IOptions<BotSettings> settings) : BackgroundService
 {
     private readonly SemaphoreSlim semaphore = new(settings.Value.MaxConcurrentDownloads);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var db = redis.GetDatabase();
         logger.LogInformation("Worker started. Concurrent for {Tasks} tasks. Waiting for tasks...", settings.Value.MaxConcurrentDownloads);
 
         while (!stoppingToken.IsCancellationRequested)
@@ -30,19 +29,12 @@ public class Worker(
 
             try
             {
-                var json = await db.ListLeftPopAsync("downloads");
+                var task = await taskRepository.DequeueTaskAsync();
 
-                if (json.IsNullOrEmpty)
-                {
-                    semaphore.Release();
-                    await Task.Delay(1000, stoppingToken);
-                    continue;
-                }
-
-                var task = JsonSerializer.Deserialize<DownloadTask>(json.ToString());
                 if (task == null)
                 {
                     semaphore.Release();
+                    await Task.Delay(1000, stoppingToken);
                     continue;
                 }
 
