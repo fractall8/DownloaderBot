@@ -10,15 +10,16 @@ namespace DownloaderBot.Shared.Services;
 
 public class BotResponseService(ITelegramBotClient botClient, IOptions<BotSettings> settings) : IBotResponseService
 {
-    public async Task SendPrivateWelcomeAsync(long chatId, string userName)
+    public async Task SendPrivateWelcomeAsync(Message message)
     {
+        string name = message.From?.Username ?? message.From?.FirstName ?? "Friend";
         var text =
-            $"👋 Hi, {userName}!\n\n" +
+            $"👋 Hi, {name}!\n\n" +
             "I'm music downloader bot. 🎧\n\n" +
             "Simply send me a link from YouTube, TikTok or SoundCloud, " +
             "and I'll respond with MP3 audio file";
 
-        await botClient.SendMessage(chatId: chatId, text: text);
+        await botClient.SendMessage(chatId: message.Chat.Id, text: text);
     }
 
     public async Task<User> GetBotInfoAsync()

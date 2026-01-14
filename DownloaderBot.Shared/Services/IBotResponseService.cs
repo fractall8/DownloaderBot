@@ -6,7 +6,7 @@ public interface IBotResponseService
 {
     Task<User> GetBotInfoAsync();
 
-    Task SendPrivateWelcomeAsync(long chatId, string userName);
+    Task SendPrivateWelcomeAsync(Message message);
 
     Task SendGroupWelcomeAsync(long chatId, User[] newChatMembers);
 

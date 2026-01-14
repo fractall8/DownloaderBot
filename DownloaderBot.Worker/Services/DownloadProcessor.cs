@@ -65,7 +65,7 @@ public class DownloadProcessor(
                     task.ChatId,
                     cachedFileId,
                     task.ReplyToMessageId);
-                
+
                 await responseService.DeleteMessageAsync(task.ChatId, task.StatusMessageId);
                 return;
             }

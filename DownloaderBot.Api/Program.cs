@@ -28,7 +28,10 @@ builder.Services.AddSingleton<IUserLimitRepository>(sp => sp.GetRequiredService<
 builder.Services.AddHostedService<WebhookStartupService>();
 builder.Services.AddScoped<IBotResponseService, BotResponseService>();
 builder.Services.AddScoped<ILinkValidatorService, LinkValidatorService>();
+builder.Services.AddScoped<ICommandParserService, CommandParserService>();
 builder.Services.AddScoped<IUserQueueService, UserQueueService>();
+
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
