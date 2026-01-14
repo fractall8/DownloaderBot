@@ -1,13 +1,9 @@
-using System.Text.Json;
-
 using DownloaderBot.Shared.Configuration;
 using DownloaderBot.Shared.Models;
 using DownloaderBot.Shared.Repositories;
 using DownloaderBot.Worker.Services;
 
 using Microsoft.Extensions.Options;
-
-using StackExchange.Redis;
 
 namespace DownloaderBot.Worker;
 
