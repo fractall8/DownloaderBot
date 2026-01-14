@@ -1,4 +1,5 @@
 using DownloaderBot.Shared.Configuration;
+using DownloaderBot.Shared.Repositories;
 using DownloaderBot.Shared.Services;
 using DownloaderBot.Worker;
 using DownloaderBot.Worker.Services;
@@ -19,8 +20,13 @@ builder.Configuration.AddJsonFile("botsettings.json", optional: false, reloadOnC
 builder.Services.Configure<BotSettings>(builder.Configuration.GetSection("BotSettings"));
 builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(botToken));
 builder.Services.AddSingleton<IBotResponseService, BotResponseService>();
-
 builder.Services.AddSingleton<IDownloadProcessor, DownloadProcessor>();
+
+builder.Services.AddSingleton<RedisRepository>();
+builder.Services.AddSingleton<ITaskRepository>(sp => sp.GetRequiredService<RedisRepository>());
+builder.Services.AddSingleton<ICacheRepository>(sp => sp.GetRequiredService<RedisRepository>());
+builder.Services.AddSingleton<IUserLimitRepository>(sp => sp.GetRequiredService<RedisRepository>());
+
 builder.Services.AddHostedService<Worker>();
 builder.Services.AddSingleton<IDownloaderService, YtDlpDownloaderService>();
 builder.Services.AddSingleton<IUserQueueService, UserQueueService>();
