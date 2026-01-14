@@ -16,7 +16,8 @@ public class ProcessTelegramUpdateHandler(
     IBotResponseService responseService,
     ITaskRepository taskRepository,
     IUserLimitRepository limitRepository,
-    IOptions<BotSettings> settings) : IRequestHandler<ProcessTelegramUpdateCommand>
+    IOptions<BotSettings> settings,
+    ILogger<ProcessTelegramUpdateHandler> logger) : IRequestHandler<ProcessTelegramUpdateCommand>
 {
     public async Task Handle(ProcessTelegramUpdateCommand request, CancellationToken cancellationToken)
     {
@@ -45,7 +46,7 @@ public class ProcessTelegramUpdateHandler(
         {
             return;
         }
-        
+
         if (!linkValidatorService.IsValid(downloadUrl))
         {
             await responseService.SendInvalidLinkAsync(message.Chat.Id, message.MessageId);
@@ -75,5 +76,6 @@ public class ProcessTelegramUpdateHandler(
         };
 
         await taskRepository.EnqueueTaskAsync(task);
+        logger.LogInformation("Task queued successfully. Url: {Url}, From chat: {ChatId}", downloadUrl, message.Chat.Id);
     }
 }
