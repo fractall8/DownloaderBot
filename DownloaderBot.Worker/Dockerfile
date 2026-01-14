@@ -11,7 +11,9 @@ RUN apt-get update && apt-get install -y \
    
 RUN pip3 install yt-dlp --break-system-packages
 
-RUN mkdir -p /app/downloads && chmod 777 /app/downloads
+RUN useradd -u 1000 -m appuser
+
+RUN mkdir -p /app/downloads && chown -R appuser:appuser /app
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
@@ -30,4 +32,7 @@ RUN dotnet publish "./DownloaderBot.Worker.csproj" -c $BUILD_CONFIGURATION -o /a
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+
+USER appuser 
+
 ENTRYPOINT ["dotnet", "DownloaderBot.Worker.dll"]
