@@ -17,9 +17,7 @@ public class DownloadProcessor(
         var steps = new List<Type>
         {
             typeof(GetVideoInfoStep),
-            typeof(LiveStreamValidator),
-            typeof(FileSizeValidatorStep),
-            typeof(VideoDurationValidatorStep),
+            typeof(ValidationStep),
             typeof(CacheCheckStep),
             typeof(DownloadFileStep),
             typeof(UploadToTelegramStep),
