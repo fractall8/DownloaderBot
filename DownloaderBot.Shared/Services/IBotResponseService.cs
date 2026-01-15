@@ -10,13 +10,13 @@ public interface IBotResponseService
 
     Task SendGroupWelcomeAsync(long chatId, User[] newChatMembers);
 
-    Task<Message> SendQueuedMessageAsync(long chatId, int replyToMessageId);
+    Task<Message?> SendQueuedMessageAsync(long chatId, int replyToMessageId);
 
-    Task<Message> SendMessageAsync(long chatId, string text, int? replyToMessageId = null);
+    Task<Message?> SendMessageAsync(long chatId, string text, int? replyToMessageId = null);
 
-    Task EditStatusMessageAsync(long chatId, int messageId, string text);
+    Task EditMessageAsync(long chatId, int messageId, string text);
 
-    Task<Message> SendAudioFileAsync(long chatId, Stream fileStream, string title, int replyToMessageId);
+    Task<Message?> SendAudioFileAsync(long chatId, Stream fileStream, string title, int replyToMessageId);
 
     Task SendCachedAudioFileAsync(long chatId, string fileId, int replyToMessageId);
 

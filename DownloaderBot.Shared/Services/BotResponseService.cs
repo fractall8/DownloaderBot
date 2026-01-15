@@ -1,14 +1,19 @@
 ﻿using DownloaderBot.Shared.Configuration;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using Telegram.Bot;
+using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
 namespace DownloaderBot.Shared.Services;
 
-public class BotResponseService(ITelegramBotClient botClient, IOptions<BotSettings> settings) : IBotResponseService
+public class BotResponseService(
+    ITelegramBotClient botClient,
+    IOptions<BotSettings> settings,
+    ILogger<BotResponseService> logger) : IBotResponseService
 {
     public async Task SendPrivateWelcomeAsync(Message message)
     {
@@ -19,7 +24,7 @@ public class BotResponseService(ITelegramBotClient botClient, IOptions<BotSettin
             "Simply send me a link from YouTube, TikTok or SoundCloud, " +
             "and I'll respond with MP3 audio file";
 
-        await botClient.SendMessage(chatId: message.Chat.Id, text: text);
+        await SendMessageAsync(chatId: message.Chat.Id, text: text, replyToMessageId: message.Id);
     }
 
     public async Task<User> GetBotInfoAsync()
@@ -41,66 +46,71 @@ public class BotResponseService(ITelegramBotClient botClient, IOptions<BotSettin
                 "<i>Example:</i>\n" +
                 "<code>/get https://youtu.be/...</code>";
 
-            await botClient.SendMessage(chatId: chatId, text: text, parseMode: ParseMode.Html);
+            await SendMessageAsync(chatId: chatId, text: text);
         }
     }
 
-    public async Task<Message> SendQueuedMessageAsync(long chatId, int replyToMessageId)
+    public async Task<Message?> SendQueuedMessageAsync(long chatId, int replyToMessageId)
     {
-        return await botClient.SendMessage(
+        return await SendMessageAsync(
             chatId: chatId,
             text: "⏳ Link added to queue",
-            replyParameters: new ReplyParameters { MessageId = replyToMessageId });
+            replyToMessageId: replyToMessageId);
     }
 
-    public async Task<Message> SendMessageAsync(long chatId, string text, int? replyToMessageId = null)
+    public async Task<Message?> SendAudioFileAsync(long chatId, Stream fileStream, string title, int replyToMessageId)
     {
-        if (replyToMessageId is { } id)
+        try
         {
-            return await botClient.SendMessage(
+            var inputFile = InputFile.FromStream(fileStream, title);
+
+            return await botClient.SendAudio(
                 chatId: chatId,
-                text: text,
-                replyParameters: new ReplyParameters { MessageId = id });
+                audio: inputFile,
+                replyParameters: new ReplyParameters
+                {
+                    MessageId = replyToMessageId,
+                    AllowSendingWithoutReply = true,
+                });
         }
-
-        return await botClient.SendMessage(
-            chatId: chatId,
-            text: text);
-    }
-
-    public async Task EditStatusMessageAsync(long chatId, int messageId, string text)
-    {
-        await botClient.EditMessageText(
-            chatId: chatId,
-            messageId: messageId,
-            text: text);
-    }
-
-    public async Task<Message> SendAudioFileAsync(long chatId, Stream fileStream, string title, int replyToMessageId)
-    {
-        var inputFile = InputFile.FromStream(fileStream, title);
-
-        return await botClient.SendAudio(
-            chatId: chatId,
-            audio: inputFile,
-            replyParameters: new ReplyParameters { MessageId = replyToMessageId });
+        catch (ApiRequestException ex)
+        {
+            logger.LogError(ex, "Error while sending audio file: {Message}", ex.Message);
+            return null;
+        }
     }
 
     public async Task SendCachedAudioFileAsync(long chatId, string fileId, int replyToMessageId)
     {
-        var inputFile = InputFile.FromFileId(fileId);
-
-        await botClient.SendAudio(
-            chatId: chatId,
-            audio: inputFile,
-            replyParameters: new ReplyParameters { MessageId = replyToMessageId });
+        try
+        {
+            var inputFile = InputFile.FromFileId(fileId);
+            await botClient.SendAudio(
+                chatId: chatId,
+                audio: inputFile,
+                replyParameters: new ReplyParameters
+                {
+                    MessageId = replyToMessageId,
+                    AllowSendingWithoutReply = true,
+                });
+        }
+        catch (ApiRequestException ex)
+        {
+            logger.LogError(ex, "Error sending cached audio: {Msg}", ex.Message);
+        }
     }
 
     public async Task DeleteMessageAsync(long chatId, int messageId)
     {
-        await botClient.DeleteMessage(
-            chatId: chatId,
-            messageId: messageId);
+        try
+        {
+            await botClient.DeleteMessage(
+                chatId: chatId,
+                messageId: messageId);
+        }
+        catch (ApiRequestException)
+        {
+        }
     }
 
     public async Task SendInvalidLinkAsync(long chatId, int messageId)
@@ -111,10 +121,43 @@ public class BotResponseService(ITelegramBotClient botClient, IOptions<BotSettin
             "Supported domains:\n" +
             $"<i>{supportedDomains}</i>";
 
-        await botClient.SendMessage(
+        await SendMessageAsync(
             chatId: chatId,
             text: text,
-            replyParameters: new ReplyParameters { MessageId = messageId },
-            parseMode: ParseMode.Html);
+            replyToMessageId: messageId);
+    }
+
+    public async Task<Message?> SendMessageAsync(long chatId, string text, int? replyToMessageId = null)
+    {
+        try
+        {
+            var replyParams = replyToMessageId.HasValue
+                ? new ReplyParameters { MessageId = replyToMessageId.Value, AllowSendingWithoutReply = true }
+                : null;
+
+            return await botClient.SendMessage(
+                chatId: chatId,
+                text: text,
+                replyParameters: replyParams,
+                parseMode: ParseMode.Html);
+        }
+        catch (ApiRequestException ex)
+        {
+            logger.LogError(ex, "Error while sending message: {Message}", ex.Message);
+        }
+
+        return null;
+    }
+
+    public async Task EditMessageAsync(long chatId, int messageId, string text)
+    {
+        try
+        {
+            await botClient.EditMessageText(chatId, messageId, text);
+        }
+        catch (ApiRequestException ex)
+        {
+            logger.LogError(ex, "Error while editing message: {Message}", ex.Message);
+        }
     }
 }

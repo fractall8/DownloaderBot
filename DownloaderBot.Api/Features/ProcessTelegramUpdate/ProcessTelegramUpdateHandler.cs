@@ -67,15 +67,18 @@ public class ProcessTelegramUpdateHandler(
 
         var statusMessage = await responseService.SendQueuedMessageAsync(message.Chat.Id, message.MessageId);
 
-        var task = new DownloadTask
+        if (statusMessage != null)
         {
-            ChatId = message.Chat.Id,
-            StatusMessageId = statusMessage.MessageId,
-            ReplyToMessageId = message.MessageId,
-            Url = downloadUrl,
-        };
+            var task = new DownloadTask
+            {
+                ChatId = message.Chat.Id,
+                StatusMessageId = statusMessage.MessageId,
+                ReplyToMessageId = message.MessageId,
+                Url = downloadUrl,
+            };
 
-        await taskRepository.EnqueueTaskAsync(task);
-        logger.LogInformation("Task queued successfully. Url: {Url}, From chat: {ChatId}", downloadUrl, message.Chat.Id);
+            await taskRepository.EnqueueTaskAsync(task);
+            logger.LogInformation("Task queued successfully. Url: {Url}, From chat: {ChatId}", downloadUrl, message.Chat.Id);
+        }
     }
 }

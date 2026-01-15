@@ -21,7 +21,7 @@ public class ValidationStep(IValidator<VideoInfo> validator, IBotResponseService
         {
             var errorMsg = result.Errors.First().ErrorMessage;
 
-            await responseService.EditStatusMessageAsync(
+            await responseService.EditMessageAsync(
                 processingContext.Task.ChatId,
                 processingContext.Task.StatusMessageId,
                 errorMsg);

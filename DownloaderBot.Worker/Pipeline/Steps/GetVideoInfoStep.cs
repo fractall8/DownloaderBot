@@ -3,14 +3,29 @@ using DownloaderBot.Worker.Services;
 
 namespace DownloaderBot.Worker.Pipeline.Steps;
 
-public class GetVideoInfoStep(IDownloaderService downloaderService, IBotResponseService responseService) : IProcessingStep
+public class GetVideoInfoStep(
+    IDownloaderService downloaderService,
+    IBotResponseService responseService,
+    ILogger<GetVideoInfoStep> logger) : IProcessingStep
 {
     public async Task ExecuteAsync(ProcessingContext processingContext)
     {
         var task = processingContext.Task;
-        await responseService.EditStatusMessageAsync(task.ChatId, task.StatusMessageId, "🔎 Checking file info...");
 
-        var info = await downloaderService.GetVideoInfoAsync(task.Url);
-        processingContext.VideoInfo = info;
+        try
+        {
+            await responseService.EditMessageAsync(task.ChatId, task.StatusMessageId, "🔎 Checking file info...");
+
+            var info = await downloaderService.GetVideoInfoAsync(task.Url);
+            processingContext.VideoInfo = info;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to get video info: {Message}", ex.Message);
+
+            string errorText = "❌ Failed to get video info. Try again later.";
+            await responseService.EditMessageAsync(task.ChatId, task.StatusMessageId, errorText);
+            processingContext.ShouldStop = true;
+        }
     }
 }

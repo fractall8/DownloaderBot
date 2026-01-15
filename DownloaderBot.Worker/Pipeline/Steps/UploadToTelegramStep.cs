@@ -8,7 +8,7 @@ public class UploadToTelegramStep(IBotResponseService responseService) : IProces
     {
         var task = processingContext.Task;
 
-        await responseService.EditStatusMessageAsync(task.ChatId, task.StatusMessageId, "⬆️ Done! Sending audio to telegram...");
+        await responseService.EditMessageAsync(task.ChatId, task.StatusMessageId, "⬆️ Done! Sending audio to telegram...");
 
         if (processingContext.DownloadFilePath != null)
         {
