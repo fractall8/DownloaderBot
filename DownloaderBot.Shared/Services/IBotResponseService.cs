@@ -10,6 +10,8 @@ public interface IBotResponseService
 
     Task SendGroupWelcomeAsync(long chatId, User[] newChatMembers);
 
+    Task SendHelpMessageAsync(long chatId);
+
     Task<Message?> SendQueuedMessageAsync(long chatId, int replyToMessageId);
 
     Task<Message?> SendMessageAsync(long chatId, string text, int? replyToMessageId = null);

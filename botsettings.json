@@ -15,7 +15,8 @@
     "MaxUserQueueSize": 5,
     "LimitMessageIntervalSecs": 10,
     "Commands": {
-      "GetInGroupCommand": "get"
+      "GetInGroupCommand": "get",
+      "HelpCommand": "help"
     }
   }
 }

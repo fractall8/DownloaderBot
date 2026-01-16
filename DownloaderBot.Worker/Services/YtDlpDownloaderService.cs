@@ -67,6 +67,8 @@ public class YtDlpDownloaderService(ILogger<YtDlpDownloaderService> logger) : ID
             AudioFormat = AudioConversionFormat.Mp3,
             ExtractAudio = true,
             Output = outputPath,
+            EmbedThumbnail = true,
+            EmbedMetadata = true,
         };
 
         logger.LogInformation("Start downloading: {Url}", url);

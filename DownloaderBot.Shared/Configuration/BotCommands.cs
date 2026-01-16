@@ -2,5 +2,7 @@
 
 public class BotCommands
 {
-    public string DownloadInGroupCommand { get; set; } = "get";
+    public string DownloadInGroupCommand { get; init; } = "get";
+
+    public string HelpCommand { get; init; } = "help";
 }

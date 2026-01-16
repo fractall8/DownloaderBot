@@ -27,10 +27,15 @@ public class ProcessTelegramUpdateHandler(
             return;
         }
 
-        // Start command response
         if (message.Text?.StartsWith("/start") == true)
         {
             await responseService.SendPrivateWelcomeAsync(message);
+            return;
+        }
+
+        if (message.Text?.StartsWith($"/{settings.Value.Commands.HelpCommand}") == true)
+        {
+            await responseService.SendHelpMessageAsync(message.Chat.Id);
             return;
         }
 

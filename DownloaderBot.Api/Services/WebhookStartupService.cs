@@ -17,7 +17,11 @@ public class WebhookStartupService(
     {
         var config = settings.Value;
         string webHookUrl = $"{config.HostAddress}/api/bot/webhook";
-        var privateCommands = new List<BotCommand> { new() { Command = "start", Description = "Start the bot", }, };
+        var privateCommands = new List<BotCommand>
+        {
+            new() { Command = "start", Description = "Start the bot", },
+            new() { Command = config.Commands.HelpCommand, Description = "Show help message", },
+        };
 
         await botClient.SetMyCommands(
             commands: privateCommands,
@@ -27,6 +31,7 @@ public class WebhookStartupService(
         var groupCommands = new List<BotCommand>
         {
             new() { Command = config.Commands.DownloadInGroupCommand, Description = "Download audio (in group)", },
+            new() { Command = config.Commands.HelpCommand, Description = "Show help message", },
         };
 
         await botClient.SetMyCommands(
