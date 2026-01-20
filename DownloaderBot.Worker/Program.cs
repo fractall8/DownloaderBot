@@ -13,7 +13,7 @@ var builder = Host.CreateApplicationBuilder(args);
 
 var redisConnectionString = Environment.GetEnvironmentVariable("REDIS_CONNECTION") ?? "localhost";
 builder.Services.AddSingleton<IConnectionMultiplexer>(
-    ConnectionMultiplexer.Connect($"{redisConnectionString},abortConnect=false"));
+    ConnectionMultiplexer.Connect(redisConnectionString));
 
 var botToken = Environment.GetEnvironmentVariable("BOT_TOKEN") ?? "token";
 
