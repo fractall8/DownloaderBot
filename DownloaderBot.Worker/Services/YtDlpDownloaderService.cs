@@ -69,6 +69,7 @@ public class YtDlpDownloaderService(ILogger<YtDlpDownloaderService> logger) : ID
             Output = outputPath,
             EmbedThumbnail = true,
             EmbedMetadata = true,
+            ForceIPv6 = true,
         };
 
         logger.LogInformation("Start downloading: {Url}", url);
