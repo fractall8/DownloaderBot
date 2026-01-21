@@ -40,6 +40,8 @@ public class Worker(
             {
                 logger.LogError(e, "Error in worker main loop");
                 semaphore.Release();
+
+                await Task.Delay(5000, stoppingToken);
             }
         }
     }

@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
    
 RUN pip3 install yt-dlp --break-system-packages
 
-RUN useradd -u 1000 -m appuser
+RUN useradd -u 1001 -m appuser
 
 RUN mkdir -p /app/downloads && chown -R appuser:appuser /app
 

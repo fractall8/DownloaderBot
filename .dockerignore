@@ -1,0 +1,8 @@
+﻿**/bin/
+**/obj/
+.vs/
+.git/
+.idea/
+
+DownloaderBot.Worker/botsettings.json
+DownloaderBot.Api/botsettings.json

@@ -9,7 +9,7 @@
       "vt.tiktok.com"
     ],
     "MaxConcurrentDownloads": 5,
-    "MaxFileSizeMb": 50,
+    "MaxFileSizeMb": 100,
     "MaxVideoDurationMins": 120,
     "CacheTtlDays": 30,
     "MaxUserQueueSize": 5,

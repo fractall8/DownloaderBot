@@ -3,11 +3,12 @@
     image: redis:alpine
     container_name: downloaderbot-redis
     restart: always
-    # network_mode: host
+    command: redis-server --logfile /var/log/redis/redis-server.log --loglevel warning
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
+      - ./logs/redis:/var/log/redis
     # Memory limit
     deploy:
       resources:
@@ -20,7 +21,6 @@
       dockerfile: ./DownloaderBot.Worker/Dockerfile
     depends_on:
       - redis
-#    network_mode: host
     environment:
       - REDIS_CONNECTION=redis
       - BOT_TOKEN=${BOT_TOKEN}
@@ -35,7 +35,6 @@
     restart: always
     depends_on:
       - redis
-#    network_mode: host
     ports:
       - "5189:8080"
     environment:
@@ -58,6 +57,5 @@
     volumes:
       - ./data:/data
       - ./letsencrypt:/etc/letsencrypt
-#    network_mode: host
 volumes:
   redis_data:
