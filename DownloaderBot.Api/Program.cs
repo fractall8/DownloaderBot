@@ -3,6 +3,8 @@ using DownloaderBot.Shared.Configuration;
 using DownloaderBot.Shared.Repositories;
 using DownloaderBot.Shared.Services;
 
+using Serilog;
+
 using StackExchange.Redis;
 
 using Telegram.Bot;
@@ -13,6 +15,8 @@ var redisConnectionString = Environment.GetEnvironmentVariable("REDIS_CONNECTION
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(
     ConnectionMultiplexer.Connect(redisConnectionString));
+
+builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Configuration(context.Configuration));
 
 var botToken = Environment.GetEnvironmentVariable("BOT_TOKEN") ?? "token";
 

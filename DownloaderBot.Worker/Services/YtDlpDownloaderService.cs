@@ -24,7 +24,6 @@ public class YtDlpDownloaderService(ILogger<YtDlpDownloaderService> logger) : ID
         }
 
         var data = res.Data;
-        logger.LogInformation("Resolved url: {Url}, ID: {Id}", data.Url, data.ID);
 
         long? size = null;
 

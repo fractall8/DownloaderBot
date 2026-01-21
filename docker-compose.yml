@@ -26,6 +26,7 @@
       - BOT_TOKEN=${BOT_TOKEN}
     volumes:
       - ./botsettings.json:/app/botsettings.json
+      - ./logs/worker:/app/logs
   api:
     build:
       context: .
@@ -46,6 +47,7 @@
       - .env
     volumes:
       - ./botsettings.json:/app/botsettings.json
+      - ./logs/api:/app/logs
   npm:
     image: 'jc21/nginx-proxy-manager:latest'
     restart: unless-stopped
