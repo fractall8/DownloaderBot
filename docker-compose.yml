@@ -1,11 +1,16 @@
 ﻿services:
+  init-permissions:
+    image: busybox
+    container_name: init-permissions
+    command: sh -c "mkdir -p /logs/redis /logs/worker /logs/api && chmod -R 777 /logs"
+    volumes:
+      - ./logs:/logs
+
   redis:
     image: redis:alpine
     container_name: downloaderbot-redis
     restart: always
     command: redis-server --logfile /var/log/redis/redis-server.log --loglevel warning
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
       - ./logs/redis:/var/log/redis
@@ -35,8 +40,6 @@
     restart: always
     depends_on:
       - redis
-    ports:
-      - "5189:8080"
     environment:
       - BotSettings__SecretToken=${SECRET_TOKEN}
       - BotSettings__HostAddress=${HOST_ADDRESS}
