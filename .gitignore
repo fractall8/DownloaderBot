@@ -7,7 +7,7 @@ riderModule.iml
 .env
 app/
 data/
-todo.txt
+*.txt
 logs/
 
 DownloaderBot.Api/botsettings.json
