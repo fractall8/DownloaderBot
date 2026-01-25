@@ -21,6 +21,8 @@
     depends_on:
       init-permissions:
         condition: service_completed_successfully
+    ports:
+      - '6379:6379'
     deploy:
       resources:
         limits:
@@ -40,12 +42,15 @@
     volumes:
       - ./botsettings.json:/app/botsettings.json
       - ./logs/worker:/app/logs
+      - ./cookies.txt:/app/cookies.txt
   api:
     build:
       context: .
       dockerfile: ./DownloaderBot.Api/Dockerfile
     container_name: downloaderbot-api
     restart: always
+    ports:
+      - '5189:8080'
     depends_on:
       redis:
         condition: service_started
