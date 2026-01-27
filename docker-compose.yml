@@ -9,7 +9,6 @@
   redis:
     image: redis:7-alpine
     container_name: downloaderbot-redis
-    restart: always
     command: >
       redis-server 
       --requirepass ${REDIS_PASSWORD}
@@ -21,13 +20,6 @@
     depends_on:
       init-permissions:
         condition: service_completed_successfully
-    ports:
-      - '6379:6379'
-    deploy:
-      resources:
-        limits:
-          cpus: '0.50'
-          memory: 256M
   worker:
     container_name: downloaderbot-worker
     build:
@@ -48,9 +40,6 @@
       context: .
       dockerfile: ./DownloaderBot.Api/Dockerfile
     container_name: downloaderbot-api
-    restart: always
-    ports:
-      - '5189:8080'
     depends_on:
       redis:
         condition: service_started
@@ -64,15 +53,5 @@
     volumes:
       - ./botsettings.json:/app/botsettings.json
       - ./logs/api:/app/logs
-  npm:
-    image: 'jc21/nginx-proxy-manager:latest'
-    restart: unless-stopped
-    ports:
-      - '80:80'
-      - '81:81'
-      - '443:443'
-    volumes:
-      - ./data:/data
-      - ./letsencrypt:/etc/letsencrypt
 volumes:
   redis_data:
