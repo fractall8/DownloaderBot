@@ -17,6 +17,7 @@
     "Commands": {
       "GetInGroupCommand": "get",
       "HelpCommand": "help"
-    }
+    },
+    "DownloadsPath": "downloads"
   }
 }

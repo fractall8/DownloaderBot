@@ -1,12 +1,15 @@
-﻿using DownloaderBot.Shared.Models;
+﻿using DownloaderBot.Shared.Configuration;
+using DownloaderBot.Shared.Models;
 using DownloaderBot.Worker.Models;
+
+using Microsoft.Extensions.Options;
 
 using YoutubeDLSharp;
 using YoutubeDLSharp.Options;
 
 namespace DownloaderBot.Worker.Services;
 
-public class YtDlpDownloaderService(ILogger<YtDlpDownloaderService> logger) : IDownloaderService
+public class YtDlpDownloaderService(IOptions<BotSettings> settings, ILogger<YtDlpDownloaderService> logger) : IDownloaderService
 {
     private readonly string cookiesPath = "/app/cookies.txt";
     private readonly string userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
@@ -15,7 +18,7 @@ public class YtDlpDownloaderService(ILogger<YtDlpDownloaderService> logger) : ID
     {
         YoutubeDLPath = "/usr/local/bin/yt-dlp",
         FFmpegPath = "/usr/bin/ffmpeg",
-        OutputFolder = "/app/downloads",
+        OutputFolder = Path.Combine(Directory.GetCurrentDirectory(), settings.Value.DownloadsPath),
     };
 
     [Obsolete]
@@ -38,11 +41,24 @@ public class YtDlpDownloaderService(ILogger<YtDlpDownloaderService> logger) : ID
 
         if (data.Formats is { Length: > 0 })
         {
-            size = data.Formats
+            var audioFormats = data.Formats
                 .Where(f => f.FileSize > 0)
+                .Where(f => f.VideoCodec == "none" || f.Extension == "none")
                 .OrderByDescending(f => f.FileSize)
-                .Select(f => f.FileSize)
-                .FirstOrDefault();
+                .ToList();
+
+            if (audioFormats.Count > 0)
+            {
+                size = audioFormats.First().FileSize;
+            }
+            else
+            {
+                size = data.Formats
+                    .Where(f => f.FileSize > 0)
+                    .OrderBy(f => f.FileSize)
+                    .Select(f => f.FileSize)
+                    .FirstOrDefault();
+            }
         }
 
         return new VideoInfo
@@ -59,7 +75,8 @@ public class YtDlpDownloaderService(ILogger<YtDlpDownloaderService> logger) : ID
     public async Task<DownloadResult> DownloadAsync(string url)
     {
         var fileName = $"{Guid.NewGuid()}.mp3";
-        var outputPath = Path.Combine("app/downloads", fileName);
+        var downloadDir = Path.Combine(Directory.GetCurrentDirectory(), settings.Value.DownloadsPath);
+        var outputPath = Path.Combine(downloadDir, fileName);
 
         var options = GetOptions();
         var videoDataResult = await youtubeDL.RunVideoDataFetch(url, overrideOptions: options);

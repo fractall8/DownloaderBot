@@ -35,6 +35,8 @@ builder.Services.AddSingleton<ITaskRepository>(sp => sp.GetRequiredService<Redis
 builder.Services.AddSingleton<ICacheRepository>(sp => sp.GetRequiredService<RedisRepository>());
 builder.Services.AddSingleton<IUserLimitRepository>(sp => sp.GetRequiredService<RedisRepository>());
 
+builder.Services.AddHostedService<StartupCleanupService>();
+
 builder.Services.AddHostedService<Worker>();
 builder.Services.AddSingleton<IDownloaderService, YtDlpDownloaderService>();
 builder.Services.AddSingleton<IUserQueueService, UserQueueService>();

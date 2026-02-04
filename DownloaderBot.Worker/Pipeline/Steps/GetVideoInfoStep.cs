@@ -1,4 +1,5 @@
 ﻿using DownloaderBot.Shared.Services;
+using DownloaderBot.Worker.Models;
 using DownloaderBot.Worker.Services;
 
 namespace DownloaderBot.Worker.Pipeline.Steps;
@@ -17,6 +18,7 @@ public class GetVideoInfoStep(
             await responseService.EditMessageAsync(task.ChatId, task.StatusMessageId, "🔎 Checking file info...");
 
             var info = await downloaderService.GetVideoInfoAsync(task.Url);
+            logger.LogInformation("File size bytes: {Bytes}", info.FileSizeBytes);
             processingContext.VideoInfo = info;
         }
         catch (Exception ex)

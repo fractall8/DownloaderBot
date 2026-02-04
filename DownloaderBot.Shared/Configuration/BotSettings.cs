@@ -21,5 +21,7 @@ public class BotSettings
 
     public string HostAddress { get; init; } = string.Empty;
 
+    public string DownloadsPath { get; init; } = "downloads";
+
     public BotCommands Commands { get; init; } = new();
 }

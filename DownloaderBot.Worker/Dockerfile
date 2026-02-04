@@ -18,7 +18,7 @@ RUN curl -fsSL https://deno.land/install.sh | sh && \
 
 RUN useradd -u 1001 -m appuser
 
-RUN mkdir -p /app/downloads && chown -R appuser:appuser /app
+RUN mkdir downloads && chown -R appuser:appuser /app
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
