@@ -18,7 +18,6 @@ public class GetVideoInfoStep(
             await responseService.EditMessageAsync(task.ChatId, task.StatusMessageId, "🔎 Checking file info...");
 
             var info = await downloaderService.GetVideoInfoAsync(task.Url);
-            logger.LogInformation("File size bytes: {Bytes}", info.FileSizeBytes);
             processingContext.VideoInfo = info;
         }
         catch (Exception ex)

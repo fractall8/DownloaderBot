@@ -6,7 +6,8 @@
       "soundcloud.com",
       "tiktok.com",
       "vm.tiktok.com",
-      "vt.tiktok.com"
+      "vt.tiktok.com",
+      "instagram.com"
     ],
     "MaxConcurrentDownloads": 5,
     "MaxFileSizeMb": 100,

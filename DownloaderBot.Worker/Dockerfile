@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     unzip \
     && rm -rf /var/lib/apt/lists/*
    
-RUN pip3 install yt-dlp --break-system-packages
+RUN pip3 install https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz --break-system-packages
 
 RUN curl -fsSL https://deno.land/install.sh | sh && \
     mv /root/.deno/bin/deno /usr/local/bin/deno
