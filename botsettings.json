@@ -6,10 +6,11 @@
       "soundcloud.com",
       "tiktok.com",
       "vm.tiktok.com",
-      "vt.tiktok.com"
+      "vt.tiktok.com",
+      "instagram.com"
     ],
     "MaxConcurrentDownloads": 5,
-    "MaxFileSizeMb": 50,
+    "MaxFileSizeMb": 100,
     "MaxVideoDurationMins": 120,
     "CacheTtlDays": 30,
     "MaxUserQueueSize": 5,
@@ -17,6 +18,7 @@
     "Commands": {
       "GetInGroupCommand": "get",
       "HelpCommand": "help"
-    }
+    },
+    "DownloadsPath": "downloads"
   }
 }

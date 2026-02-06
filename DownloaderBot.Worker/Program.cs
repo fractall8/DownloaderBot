@@ -5,15 +5,20 @@ using DownloaderBot.Worker;
 using DownloaderBot.Worker.Extensions;
 using DownloaderBot.Worker.Services;
 
+using Serilog;
+
 using StackExchange.Redis;
 
 using Telegram.Bot;
 
 var builder = Host.CreateApplicationBuilder(args);
 
+builder.Services.AddSerilog(config =>
+    config.ReadFrom.Configuration(builder.Configuration));
+
 var redisConnectionString = Environment.GetEnvironmentVariable("REDIS_CONNECTION") ?? "localhost";
 builder.Services.AddSingleton<IConnectionMultiplexer>(
-    ConnectionMultiplexer.Connect($"{redisConnectionString},abortConnect=false"));
+    ConnectionMultiplexer.Connect(redisConnectionString));
 
 var botToken = Environment.GetEnvironmentVariable("BOT_TOKEN") ?? "token";
 
@@ -29,6 +34,8 @@ builder.Services.AddSingleton<RedisRepository>();
 builder.Services.AddSingleton<ITaskRepository>(sp => sp.GetRequiredService<RedisRepository>());
 builder.Services.AddSingleton<ICacheRepository>(sp => sp.GetRequiredService<RedisRepository>());
 builder.Services.AddSingleton<IUserLimitRepository>(sp => sp.GetRequiredService<RedisRepository>());
+
+builder.Services.AddHostedService<StartupCleanupService>();
 
 builder.Services.AddHostedService<Worker>();
 builder.Services.AddSingleton<IDownloaderService, YtDlpDownloaderService>();

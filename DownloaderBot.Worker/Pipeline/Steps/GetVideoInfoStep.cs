@@ -1,4 +1,5 @@
 ﻿using DownloaderBot.Shared.Services;
+using DownloaderBot.Worker.Models;
 using DownloaderBot.Worker.Services;
 
 namespace DownloaderBot.Worker.Pipeline.Steps;

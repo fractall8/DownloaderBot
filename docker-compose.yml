@@ -1,0 +1,57 @@
+﻿services:
+  init-permissions:
+    image: busybox
+    container_name: init-permissions
+    command: sh -c "mkdir -p /logs/redis /logs/worker /logs/api && chmod -R 777 /logs"
+    volumes:
+      - ./logs:/logs
+
+  redis:
+    image: redis:7-alpine
+    container_name: downloaderbot-redis
+    command: >
+      redis-server 
+      --requirepass ${REDIS_PASSWORD}
+      --rename-command CONFIG ""
+      --loglevel warning
+    volumes:
+      - redis_data:/data
+      - ./logs/redis:/var/log/redis
+    depends_on:
+      init-permissions:
+        condition: service_completed_successfully
+  worker:
+    container_name: downloaderbot-worker
+    build:
+      context: .
+      dockerfile: ./DownloaderBot.Worker/Dockerfile
+    depends_on:
+      redis:
+        condition: service_started
+    environment:
+      - REDIS_CONNECTION=redis,password=${REDIS_PASSWORD}
+      - BOT_TOKEN=${BOT_TOKEN}
+    volumes:
+      - ./botsettings.json:/app/botsettings.json
+      - ./logs/worker:/app/logs
+      - ./cookies.txt:/app/cookies.txt
+  api:
+    build:
+      context: .
+      dockerfile: ./DownloaderBot.Api/Dockerfile
+    container_name: downloaderbot-api
+    depends_on:
+      redis:
+        condition: service_started
+    environment:
+      - BotSettings__SecretToken=${SECRET_TOKEN}
+      - BotSettings__HostAddress=${HOST_ADDRESS}
+      - REDIS_CONNECTION=redis,password=${REDIS_PASSWORD}
+      - BOT_TOKEN=${BOT_TOKEN}
+    env_file:
+      - .env
+    volumes:
+      - ./botsettings.json:/app/botsettings.json
+      - ./logs/api:/app/logs
+volumes:
+  redis_data:

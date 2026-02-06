@@ -83,7 +83,7 @@ public class ProcessTelegramUpdateHandler(
             };
 
             await taskRepository.EnqueueTaskAsync(task);
-            logger.LogInformation("Task queued successfully. Url: {Url}, From chat: {ChatId}", downloadUrl, message.Chat.Id);
+            logger.LogInformation("Task queued successfully.\nUrl: {Url}\nUsername: {User} From chat: {ChatId}", downloadUrl, message.Chat.Username, message.Chat.Id);
         }
     }
 }

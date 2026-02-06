@@ -6,6 +6,9 @@ riderModule.iml
 .idea/
 .env
 app/
+data/
+*.txt
+logs/
 
 DownloaderBot.Api/botsettings.json
 DownloaderBot.Worker/botsettings.json

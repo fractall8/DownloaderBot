@@ -11,6 +11,10 @@
     <ItemGroup>
         <PackageReference Include="FluentValidation" Version="12.1.1" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.1"/>
+        <PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0" />
+        <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.1-dev-02330" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+        <PackageReference Include="Serilog.Sinks.File" Version="8.0.0-dev-02318" />
         <PackageReference Include="StackExchange.Redis" Version="2.10.1" />
         <PackageReference Include="Telegram.Bot" Version="22.8.1" />
         <PackageReference Include="YoutubeDLSharp" Version="1.2.0" />
