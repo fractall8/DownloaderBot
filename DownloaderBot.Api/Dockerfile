@@ -21,4 +21,7 @@ RUN dotnet publish "./DownloaderBot.Api.csproj" -c $BUILD_CONFIGURATION -o /app/
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+COPY cookies.txt /app/cookies.txt
+USER root
+RUN chmod 666 /app/cookies.txt
 ENTRYPOINT ["dotnet", "DownloaderBot.Api.dll"]

@@ -3,7 +3,6 @@ using DownloaderBot.Shared.Models;
 using DownloaderBot.Worker.Models;
 
 using Microsoft.Extensions.Options;
-
 using YoutubeDLSharp;
 using YoutubeDLSharp.Options;
 
@@ -14,6 +13,8 @@ public class YtDlpDownloaderService(IOptions<BotSettings> settings, ILogger<YtDl
     private readonly string cookiesPath = "/app/cookies.txt";
     private readonly string userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
+    private static HttpClient httpClient = new HttpClient();
+
     private readonly YoutubeDL youtubeDL = new()
     {
         YoutubeDLPath = "/usr/local/bin/yt-dlp",
@@ -21,12 +22,13 @@ public class YtDlpDownloaderService(IOptions<BotSettings> settings, ILogger<YtDl
         OutputFolder = Path.Combine(Directory.GetCurrentDirectory(), settings.Value.DownloadsPath),
     };
 
-    [Obsolete]
     public async Task<VideoInfo> GetVideoInfoAsync(string url)
     {
         var options = GetOptions();
 
-        var res = await youtubeDL.RunVideoDataFetch(url, overrideOptions: options);
+        var finalUrl = await ResolveUrlAsync(url);
+
+        var res = await youtubeDL.RunVideoDataFetch(finalUrl, overrideOptions: options);
         if (!res.Success)
         {
             var errorMsg = string.Join('\n', res.ErrorOutput);
@@ -71,7 +73,6 @@ public class YtDlpDownloaderService(IOptions<BotSettings> settings, ILogger<YtDl
         };
     }
 
-    [Obsolete]
     public async Task<DownloadResult> DownloadAsync(string url)
     {
         var fileName = $"{Guid.NewGuid()}.mp3";
@@ -79,7 +80,8 @@ public class YtDlpDownloaderService(IOptions<BotSettings> settings, ILogger<YtDl
         var outputPath = Path.Combine(downloadDir, fileName);
 
         var options = GetOptions();
-        var videoDataResult = await youtubeDL.RunVideoDataFetch(url, overrideOptions: options);
+        var finalUrl = await ResolveUrlAsync(url);
+        var videoDataResult = await youtubeDL.RunVideoDataFetch(finalUrl, overrideOptions: options);
 
         if (!videoDataResult.Success)
         {
@@ -96,7 +98,7 @@ public class YtDlpDownloaderService(IOptions<BotSettings> settings, ILogger<YtDl
         downloadOptions.EmbedThumbnail = true;
         downloadOptions.EmbedMetadata = true;
 
-        logger.LogInformation("Start downloading: {Url}", url);
+        logger.LogInformation("Start downloading: {Url}", finalUrl);
         var result = await youtubeDL.RunAudioDownload(
             url,
             AudioConversionFormat.Mp3,
@@ -128,7 +130,6 @@ public class YtDlpDownloaderService(IOptions<BotSettings> settings, ILogger<YtDl
         return new DownloadResult(finalPath, cleanTitle);
     }
 
-    [Obsolete]
     private OptionSet GetOptions()
     {
         var options = new OptionSet
@@ -138,6 +139,7 @@ public class YtDlpDownloaderService(IOptions<BotSettings> settings, ILogger<YtDl
 
         options.AddCustomOption("--add-header", $"User-Agent:{userAgent}");
         options.AddCustomOption("--remote-components", "ejs:github");
+        options.AddCustomOption("--impersonate", "chrome");
 
         if (File.Exists(cookiesPath))
         {
@@ -149,5 +151,32 @@ public class YtDlpDownloaderService(IOptions<BotSettings> settings, ILogger<YtDl
         }
 
         return options;
+    }
+
+    private async Task<string> ResolveUrlAsync(string shortUrl)
+    {
+        if (!settings.Value.ShortDomains.Any(domain => shortUrl.Contains(domain)))
+        {
+            return shortUrl;
+        }
+
+        try
+        {
+            var req = new HttpRequestMessage(HttpMethod.Head, shortUrl);
+            var res = await httpClient.SendAsync(req);
+
+            var finalUrl = res.RequestMessage?.RequestUri?.ToString();
+            if (!string.IsNullOrEmpty(finalUrl) && finalUrl != shortUrl)
+            {
+                logger.LogInformation("Resolved URL: {Url}", finalUrl);
+                return finalUrl;
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to resolve full url: {ShortUrl}", shortUrl);
+        }
+
+        return shortUrl;
     }
 }

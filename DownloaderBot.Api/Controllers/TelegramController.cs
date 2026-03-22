@@ -24,7 +24,7 @@ public class TelegramController(IOptions<BotSettings> settings) : ControllerBase
     {
         if (secretToken != settings.Value.SecretToken)
         {
-            return Forbid();
+            return Unauthorized();
         }
 
         var update = jsonElement.Deserialize<Update>(new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
