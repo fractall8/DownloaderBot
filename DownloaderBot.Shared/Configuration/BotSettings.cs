@@ -4,6 +4,8 @@ public class BotSettings
 {
     // default settings
     public string[] AllowedDomains { get; init; } = [];
+    
+    public string[] ShortDomains { get; init; } = [];
 
     public int MaxConcurrentDownloads { get; init; } = 3;
 
