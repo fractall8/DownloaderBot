@@ -28,6 +28,7 @@ builder.Services.AddSingleton<RedisRepository>();
 builder.Services.AddSingleton<ITaskRepository>(sp => sp.GetRequiredService<RedisRepository>());
 builder.Services.AddSingleton<ICacheRepository>(sp => sp.GetRequiredService<RedisRepository>());
 builder.Services.AddSingleton<IUserLimitRepository>(sp => sp.GetRequiredService<RedisRepository>());
+builder.Services.AddSingleton<ISettingsRepository, SettingsRepository>();
 
 builder.Services.AddHostedService<WebhookStartupService>();
 builder.Services.AddScoped<IBotResponseService, BotResponseService>();

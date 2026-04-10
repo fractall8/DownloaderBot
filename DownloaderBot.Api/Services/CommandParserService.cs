@@ -1,4 +1,7 @@
-﻿using DownloaderBot.Shared.Configuration;
+﻿using System.Text.RegularExpressions;
+
+using DownloaderBot.Shared.Configuration;
+using DownloaderBot.Shared.Repositories;
 using DownloaderBot.Shared.Services;
 
 using Microsoft.Extensions.Options;
@@ -8,7 +11,10 @@ using Telegram.Bot.Types.Enums;
 
 namespace DownloaderBot.Api.Services;
 
-public class CommandParserService(IBotResponseService responseService, IOptions<BotSettings> settings) : ICommandParserService
+public class CommandParserService(
+    IBotResponseService responseService,
+    ISettingsRepository settingsRepository,
+    IOptions<BotSettings> settings) : ICommandParserService
 {
     public async Task<string?> ParseDownloadUrlAsync(Message message)
     {
@@ -20,7 +26,8 @@ public class CommandParserService(IBotResponseService responseService, IOptions<
         string downloadInGroupCommand = settings.Value.Commands.DownloadInGroupCommand;
         string commandWithSlash = $"/{downloadInGroupCommand}";
 
-        if (message.Chat.Type == ChatType.Private)
+        var mode = await settingsRepository.GetChatMode(message.Chat.Id);
+        if (message.Chat.Type == ChatType.Private || mode == "parse")
         {
             var text = message.Text.Trim();
             if (text.StartsWith(commandWithSlash, StringComparison.OrdinalIgnoreCase))
@@ -28,7 +35,8 @@ public class CommandParserService(IBotResponseService responseService, IOptions<
                 return await ExtractUrl(message.Text, commandWithSlash);
             }
 
-            return text;
+            string pattern = @"(https://[^\s]+)";
+            return Regex.Match(text, pattern, RegexOptions.IgnoreCase).Value;
         }
 
         if (message.Text.StartsWith(commandWithSlash, StringComparison.OrdinalIgnoreCase))

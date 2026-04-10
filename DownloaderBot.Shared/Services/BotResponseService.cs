@@ -1,4 +1,5 @@
 ﻿using DownloaderBot.Shared.Configuration;
+using DownloaderBot.Shared.Repositories;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -7,11 +8,13 @@ using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace DownloaderBot.Shared.Services;
 
 public class BotResponseService(
     ITelegramBotClient botClient,
+    ISettingsRepository settingsRepository,
     IOptions<BotSettings> settings,
     ILogger<BotResponseService> logger) : IBotResponseService
 {
@@ -68,6 +71,58 @@ public class BotResponseService(
             $"In groups/chats: /{settings.Value.Commands.DownloadInGroupCommand} [link]";
 
         await SendMessageAsync(chatId: chatId, text: text);
+    }
+
+    public async Task SendSettingsMessageAsync(long chatId)
+    {
+        var mode = await settingsRepository.GetChatMode(chatId);
+        var inlineKeyboard = new InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton.WithCallbackData(
+                    text: mode == "parse" ? "✅ Mode: Parse links from messages" : "Mode: Parse links from messages",
+                    callbackData: "set_mode_parse")
+            ],
+            [
+                InlineKeyboardButton.WithCallbackData(
+                    text: mode == "commands" ? "✅ Mode: Get links only from commands" : "Mode: Get links only from commands", 
+                    callbackData: "set_mode_commands")
+            ]
+        ]);
+
+        await SendMessageAsync(
+            chatId: chatId,
+            text: "⚙️ Bot Settings\nChange work mode in groups:",
+            replyMarkup: inlineKeyboard);
+    }
+
+    public async Task HandleSettingsCallbackAsync(long chatId, CallbackQuery callbackQuery)
+    {
+        logger.LogInformation("Callback handling: {Data}", callbackQuery.Data);
+        string newMode = callbackQuery.Data == "set_mode_parse" ? "parse" : "commands";
+        await settingsRepository.UpdateChatMode(chatId, newMode);
+
+        await botClient.AnswerCallbackQuery(
+            callbackQueryId: callbackQuery.Id,
+            text: $"Mode changed to: {newMode}");
+
+        var mode = await settingsRepository.GetChatMode(chatId);
+        var inlineKeyboard = new InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton.WithCallbackData(
+                    text: mode == "parse" ? "✅ Mode: Parse links from messages" : "Mode: Parse links from messages",
+                    callbackData: "set_mode_parse")
+            ],
+            [
+                InlineKeyboardButton.WithCallbackData(
+                    text: mode == "commands" ? "✅ Mode: Get links only from commands" : "Mode: Get links only from commands", 
+                    callbackData: "set_mode_commands")
+            ]
+        ]);
+
+        await SendMessageAsync(
+            chatId: chatId,
+            text: "⚙️ Bot Settings\nChange work mode in groups:",
+            replyMarkup: inlineKeyboard);
     }
 
     public async Task<Message?> SendQueuedMessageAsync(long chatId, int replyToMessageId)
@@ -147,7 +202,7 @@ public class BotResponseService(
             replyToMessageId: messageId);
     }
 
-    public async Task<Message?> SendMessageAsync(long chatId, string text, int? replyToMessageId = null)
+    public async Task<Message?> SendMessageAsync(long chatId, string text, int? replyToMessageId = null, ReplyMarkup? replyMarkup = null)
     {
         try
         {
@@ -159,7 +214,8 @@ public class BotResponseService(
                 chatId: chatId,
                 text: text,
                 replyParameters: replyParams,
-                parseMode: ParseMode.Html);
+                parseMode: ParseMode.Html,
+                replyMarkup: replyMarkup);
         }
         catch (ApiRequestException ex)
         {

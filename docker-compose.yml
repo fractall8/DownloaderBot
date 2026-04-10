@@ -14,6 +14,7 @@
       --requirepass ${REDIS_PASSWORD}
       --rename-command CONFIG ""
       --loglevel warning
+      --appendonly yes
     volumes:
       - redis_data:/data
       - ./logs/redis:/var/log/redis

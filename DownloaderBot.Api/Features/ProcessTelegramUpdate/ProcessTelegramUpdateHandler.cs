@@ -8,6 +8,8 @@ using MediatR;
 
 using Microsoft.Extensions.Options;
 
+using Telegram.Bot.Types.Enums;
+
 namespace DownloaderBot.Api.Features.ProcessTelegramUpdate;
 
 public class ProcessTelegramUpdateHandler(
@@ -16,13 +18,20 @@ public class ProcessTelegramUpdateHandler(
     IBotResponseService responseService,
     ITaskRepository taskRepository,
     IUserLimitRepository limitRepository,
+    ISettingsRepository settingsRepository,
     IOptions<BotSettings> settings,
     ILogger<ProcessTelegramUpdateHandler> logger) : IRequestHandler<ProcessTelegramUpdateCommand>
 {
     public async Task Handle(ProcessTelegramUpdateCommand request, CancellationToken cancellationToken)
     {
         var update = request.Update;
-        if (update?.Message is not { } message)
+        if (update.Type == UpdateType.CallbackQuery && update.CallbackQuery?.Message?.Chat.Id != null)
+        {
+            logger.LogInformation("Received callback query");
+            await responseService.HandleSettingsCallbackAsync(update.CallbackQuery.Message.Chat.Id, update.CallbackQuery);
+        }
+
+        if (update.Message is not { } message)
         {
             return;
         }
@@ -39,6 +48,12 @@ public class ProcessTelegramUpdateHandler(
             return;
         }
 
+        if (message.Text?.StartsWith($"/{settings.Value.Commands.SettingsCommand}") == true && message.Chat.Type != ChatType.Private)
+        {
+            await responseService.SendSettingsMessageAsync(message.Chat.Id);
+            return;
+        }
+
         // Response to adding bot to group
         if (message.NewChatMembers is { Length: > 0 } newChatMembers)
         {
@@ -47,14 +62,19 @@ public class ProcessTelegramUpdateHandler(
         }
 
         string? downloadUrl = await commandParserService.ParseDownloadUrlAsync(message);
-        if (downloadUrl == null)
+        if (string.IsNullOrEmpty(downloadUrl))
         {
             return;
         }
 
         if (!linkValidatorService.IsValid(downloadUrl))
         {
-            await responseService.SendInvalidLinkAsync(message.Chat.Id, message.MessageId);
+            var mode = await settingsRepository.GetChatMode(message.Chat.Id);
+            if (mode == "commands")
+            {
+                await responseService.SendInvalidLinkAsync(message.Chat.Id, message.MessageId);
+            }
+
             return;
         }
 

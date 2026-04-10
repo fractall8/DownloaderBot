@@ -22,7 +22,8 @@
     "LimitMessageIntervalSecs": 10,
     "Commands": {
       "GetInGroupCommand": "get",
-      "HelpCommand": "help"
+      "HelpCommand": "help",
+      "SettingsCommand": "settings"
     },
     "DownloadsPath": "downloads"
   }

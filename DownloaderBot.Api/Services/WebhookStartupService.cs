@@ -10,8 +10,7 @@ namespace DownloaderBot.Api.Services;
 
 public class WebhookStartupService(
     ITelegramBotClient botClient,
-    IOptions<BotSettings> settings,
-    ILogger<WebhookStartupService> logger) : IHostedService
+    IOptions<BotSettings> settings) : IHostedService
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -32,6 +31,7 @@ public class WebhookStartupService(
         {
             new() { Command = config.Commands.DownloadInGroupCommand, Description = "Download audio (in group)", },
             new() { Command = config.Commands.HelpCommand, Description = "Show help message", },
+            new() { Command = config.Commands.SettingsCommand, Description = "Change settings of the bot", },
         };
 
         await botClient.SetMyCommands(
@@ -41,7 +41,7 @@ public class WebhookStartupService(
 
         await botClient.SetWebhook(
             url: webHookUrl,
-            allowedUpdates: [UpdateType.Message, UpdateType.MyChatMember],
+            allowedUpdates: [UpdateType.Message, UpdateType.MyChatMember, UpdateType.CallbackQuery],
             secretToken: config.SecretToken,
             cancellationToken: cancellationToken);
     }
